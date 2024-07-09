@@ -113,6 +113,8 @@ function setup() {
   setupAnimations();
 
   game.inventory.cash += 10;
+
+  world.towers.push(new TestTower(world, 382, 230))
 }
 
 function makeBloon(track, type = RedBloon) {

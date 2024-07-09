@@ -49,7 +49,7 @@ function RADShape(shape, shape_x, shape_y, shape_width, shape_height, shape_angl
 }
 
 function angleToVector(angle) {
-  return new Vector(Math.cos(angle - HALF_PI), Math.sin(angle - HALF_PI));
+  return new Vector(Math.cos(angle), Math.sin(angle));
 }
 
 function convertToVector(object){
@@ -85,7 +85,7 @@ class Vector {
     return Math.atan2(this.y, this.x);
   }
   angleTo(vct){
-    return this.getAngle() - vct.getAngle()
+    return vct.subtract(this).getAngle()
   }
   angleBetween(vct){
     return Math.abs(this.getAngle() - vct.getAngle())

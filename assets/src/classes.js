@@ -267,7 +267,7 @@ class Bullet {
     //Tracking, i guess
     this.trackingType = "nope";
     this.tracking = false;
-    this.trackingRange = yes;
+    this.trackingRange = Infinity;
 
     //Advanced
     this.collides = true;
@@ -693,9 +693,8 @@ class Entity {
       effect_registry[status.effect].onApply.apply(this);
     }
   }
-  get actualSpeed(){
-    console.log("speed is "+this.speed+" * "+this.#speedMultiplier+" = "+this.speed * this.#speedMultiplier)
-    return this.speed * this.#speedMultiplier
+  get actualSpeed() {
+    return this.speed * this.#speedMultiplier;
   }
   tickDynamicVelocity(time) {
     if (this.speed != 0) {
@@ -861,7 +860,7 @@ class Entity {
     return thisVector.add(moveVector.getScaledVector(adjustment));
   }
   draw() {
-    if (this.showHealthbar) {
+    if (this.showHealthbar && this.health < this.maxHealth) {
       push();
       rectMode(CORNER);
       fill(255, 0, 0);
@@ -1184,6 +1183,92 @@ class CeramicBloon extends BloonType {
       2
     );
     this.type = "ceramic";
+  }
+}
+
+class Tower extends Entity {
+  _targetPriority;
+  _reloadLeft = 0;
+  constructor(world, x, y, drawer, bullet, reload, range, size) {
+    super(world, x, y, 1000, 0, drawer, size);
+    this.bullet = bullet;
+    this.reload = reload;
+    this.range = range;
+  }
+  tickExt() {
+    let target = this.findTarget();
+    if (this._reloadLeft > 0) {
+      this._reloadLeft--;
+      return;
+    } else {
+      if (target) {
+        this.fire();
+      }
+    }
+  }
+  findTarget() {
+    let target,
+      minDist = Infinity;
+    for (let e of this.world.bloons) {
+      let dist = this.getPos().distanceTo(e.getPos());
+      if (dist <= this.range + e.size) {
+        if (dist < minDist) {
+          minDist = dist;
+          target = e;
+        }
+      }
+    }
+    if (target) {
+      this.rotation = this.getPos().angleTo(target.getPos());
+      return target;
+    }
+    return null;
+  }
+  fire() {
+    console.log(this.bullet)
+    let bulletToFire = bullet(this.bullet, this);
+    bulletToFire.x = this.x;
+    bulletToFire.y = this.y;
+    bulletToFire.direction = this.rotation;
+    this.world.bullets.push(bulletToFire);
+    this._reloadLeft = this.reload;
+  }
+  draw() {
+    super.draw();
+    noStroke();
+    fill(100, 100);
+    circle(this.x, this.y, this.range * 2);
+  }
+}
+
+class TestTower extends Tower {
+  constructor(world, x, y) {
+    let bulletToAdd = {
+      type: Bullet,
+      damage: 1,
+      size: 2,
+      drawer: new DrawShape(
+        "rect",
+        [255, 0, 0],
+        [255, 0, 0],
+        0,
+        4,
+        6
+      ),
+      speed: 12,
+      lifetime: 5,
+      trailColour: [255, 0, 0]
+    }
+    super(
+      world,
+      x,
+      y,
+      new DrawShape("rect", [255, 0, 0], [0, 0, 0], 3, 10, 20),
+      bulletToAdd,
+      10,
+      60,
+      20
+    );
   }
 }
 
