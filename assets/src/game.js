@@ -43,8 +43,8 @@ let game = {
   xp: 0,
   /** XP level */
   level: 0,
-  /** Current track the game is on. */
-  track: {},
+  /** Map the game is in. Replaces tracks. */
+  map: null
 };
 /**Contains properties relating to the user interface*/
 let ui = {
@@ -55,6 +55,8 @@ let ui = {
   /** UI animation part and progress storage */
   anims: {},
   font: null,
+  mapPageDifficulty: 0,
+  mapMenuPage: 1
 };
 
 /**Represents the current in-world mouse.*/
@@ -71,21 +73,9 @@ let waitingForKeyRelease = false;
 
 let { world, player, state } = game;
 
-const tracks = {
-  test: {
-    world: world,
-    points: [
-      { x: 85, y: 800 },
-      { x: 85, y: 202 },
-      { x: 662, y: 202 },
-      { x: 662, y: 347 },
-      { x: 410, y: 347 },
-      { x: 410, y: 0 },
-    ],
-  },
-};
+let sortedMaps
 
-game.track = tracks.test;
+game.map = maps.grasslands
 
 let particleLayer, lightingLayer;
 
@@ -115,10 +105,25 @@ function setup() {
   game.inventory.cash += 10;
 
   world.towers.push(new TestTower(world, 382, 230))
+
+  //Sort maps
+  sortedMaps = [
+    [],
+    [],
+    [],
+    [],
+    []
+  ]
+  for(let mapName in maps){
+    let map = maps[mapName];
+    sortedMaps[map.difficulty].push(map)
+  }
+  console.log(sortedMaps)
 }
 
-function makeBloon(track, type = RedBloon) {
-  let blon = new type(track);
+/** Makes a bloon on the current map. Optionally takes a parameter for the track index to place the bloon on. */
+function makeBloon(type = RedBloon, trackIndex = 0) {
+  let blon = new type(world, game.map, trackIndex);
   world.bloons.push(blon);
   //blon.addStatus({ effect: "cold", time: 180 });
 }
@@ -128,15 +133,14 @@ function mousePressed() {}
 function keyPressed() {}
 
 function draw() {
+  clear();
   tickMouse();
   if (state === "start-menu") {
     startMenu();
-    //} else if (state === "select-menu") {
-    //  drawOffsetGame();
-    //   selectMenu();
+  } else if (state === "map-select") {
+    selectMenu();
   } else if (state === "game") {
-    clear();
-    image(images.maps.map1, 400, 400, 800, 800);
+    image(images.maps[game.map.background], 400, 400, 800, 800);
     gameLoop();
     drawOffsetGame();
     drawInGameUI();
@@ -386,11 +390,67 @@ function startMenu() {
   showTitleAt(400, 100);
 
   //Start button
-  button(400, 700, 200, 80, "Start", () => {
+  {
+    push()
+    noStroke()
+    fill(...colours.ui.buttons.contrast)
+    textSize(30)
+    text("Map: "+game.map.displayName, 400, 770)
+    pop()
+  }
+  button(340, 700, 150, 80, "Start", () => {
     state = "game";
+  });
+  button(490, 700, 80, 80, "Map\nSelect", () => {
+    state = "map-select";
   });
 
   pop();
+}
+
+function selectMenu(){
+  background(colours.ui.background)
+
+  {
+    //for(let difficulty = 0; difficulty < sortedMaps.length; difficulty ++){
+    let difficulty = ui.mapPageDifficulty
+      push()
+      let showX = 160, showY = 160
+      noStroke()
+      fill(...colours.ui.buttons.contrast)
+      textSize(50)
+      text(names.difficulties[difficulty]+" Maps", 400, 40)
+      let len = Math.min(6, sortedMaps[difficulty].length)
+      for(let mapIndex = 0; mapIndex < len; mapIndex ++){
+        let map = sortedMaps[difficulty][mapIndex + 6 * (ui.mapMenuPage - 1)]
+        if(map){
+          mapButton(showX, showY, map)
+        }
+        showX += 240
+        if(showX > 720){
+          showX = 160
+          showY += 260
+        }
+        if(showY > 720){
+
+          break;
+        }
+      }
+      pop()
+    //}
+  }
+
+  if(ui.mapMenuPage < Math.round(sortedMaps[ui.mapPageDifficulty].length/6)){
+    button(750, 700, 40, 80, ">", () => {
+      ui.mapMenuPage++;
+    });
+  }
+  if(ui.mapMenuPage > 1){
+    button(50, 700, 40, 80, "<", () => {
+      ui.mapMenuPage--;
+    });
+  }
+  
 }
 
 function showTitleAt(x, y) {
@@ -425,7 +485,10 @@ function showTitleAt(x, y) {
   text("Bloons", x, y + 32);
 }
 
-/** Creates a button for 1 frame. When pressed, activates the `onPress` function parameter. If the `draw` parameter is false, then the button won't be visible.*/
+/** 
+ * Creates a button for 1 frame. When pressed, activates the `onPress` function parameter. If the `draw` parameter is false, then the button won't be visible.
+ * Can only display text
+ */
 function button(
   x = 0,
   y = 0,
@@ -475,6 +538,84 @@ function button(
   }
   pop();
   return false;
+}
+
+/** 
+ * A button that shows an image instead of text. Identical to a button made with `button`.
+ */
+function imageButton(
+  x = 0,
+  y = 0,
+  width = 30,
+  height = 30,
+  shownImage = error,
+  onPress = () => {},
+  draw = true
+) {
+  push();
+  if (draw) {
+    rectMode(CENTER);
+    stroke(...colours.ui.buttons.contrast);
+    strokeWeight(5);
+  }
+  let hovered =
+    mouseX > x - width / 2 &&
+    mouseX < x + width / 2 &&
+    mouseY < y + height / 2 &&
+    mouseY > y - height / 2;
+  if (hovered) {
+    if (draw) {
+      noFill();
+      rect(x, y, width, height);
+      fill(...colours.ui.buttons.highlight);
+      tint(128)
+    }
+  } else {
+    if (draw) {
+      fill(...colours.ui.buttons.main);
+    }
+  }
+  if (mouseIsPressed && !waitingForKeyRelease) {
+    if (hovered) {
+      waitingForKeyRelease = true;
+      onPress();
+    }
+  }
+
+  if (draw) {
+    rect(x, y, width, height);
+    image(shownImage, x, y, width - 10, height - 10);
+  }
+  pop();
+  return false;
+}
+
+function captionedImageButton(
+  x = 0,
+  y = 0,
+  width = 30,
+  height = 30,
+  shownImage = error,
+  shownText = "",
+  onPress = () => {},
+  draw = true
+) {
+  push()
+  imageButton(x, y, width, height, shownImage, onPress, draw)
+  textSize(30); //starting point for checks
+  textSize(((textSize() * width) / textWidth(shownText)) * 0.8);
+  fill(...colours.ui.buttons.contrast);
+  noStroke();
+  textAlign(CENTER, CENTER);
+  text(shownText, x, y + textSize() * 1.12 + height/2/*, width, height*/);
+  pop()
+}
+
+function mapButton(x, y, map){
+  captionedImageButton(x, y, 200, 200, images.maps[map.background], map.displayName, ()=>{
+    game.map = map
+    state = "start-menu"
+  })
 }
 
 function drawInGameUI() {
@@ -672,7 +813,7 @@ function bloonSendButton(x, y, bloon, bloonClass) {
   button(x + 40, y, 40, 30, "-->", () => {
     if (game.inventory.bloons[bloon + "s"] >= 1) {
       game.inventory.bloons[bloon + "s"]--;
-      makeBloon(game.track, bloonClass);
+      makeBloon(bloonClass);
     }
   });
 }

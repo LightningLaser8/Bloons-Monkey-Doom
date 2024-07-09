@@ -888,9 +888,26 @@ class BloonType extends Entity {
   progress = 0;
   leaked = false;
   type = "red";
-  constructor(track, health, speed, drawer, size, child, numChildren = 1) {
+  constructor(
+    world,
+    map,
+    trackIndex,
+    health,
+    speed,
+    drawer,
+    size,
+    child,
+    numChildren = 1
+  ) {
+    let track = map.tracks[trackIndex];
+    if (!track) {
+      console.warn(
+        "Track " + trackIndex + " does not exist on map " + map.displayName
+      );
+      track = map.tracks[0];
+    }
     super(
-      track.world,
+      world,
       track.points[0].x,
       track.points[0].y,
       health,
@@ -899,7 +916,9 @@ class BloonType extends Entity {
       size
     );
     this.showHealthbar = false;
-    this.track = track;
+    this.track = map.tracks[trackIndex];
+    this.map = map;
+    this.trackIndex = trackIndex;
     this.child = child;
     this.numChildren = numChildren;
   }
@@ -979,7 +998,7 @@ class BloonType extends Entity {
   split(damageToDeal = 0) {
     if (this.child) {
       for (let i = 0; i < this.numChildren; i++) {
-        let child = new this.child(this.track);
+        let child = new this.child(this.world, this.map, this.trackIndex);
         child.x = this.x;
         child.y = this.y;
         child.progress = this.progress;
@@ -1019,16 +1038,27 @@ class BloonType extends Entity {
 }
 
 class RedBloon extends BloonType {
-  constructor(track) {
-    super(track, 1, 2, new DrawImage(images.bloons.red, 25, 32), 10, null);
+  constructor(world, map, trackIndex) {
+    super(
+      world,
+      map,
+      trackIndex,
+      1,
+      2,
+      new DrawImage(images.bloons.red, 25, 32),
+      10,
+      null
+    );
     this.type = "red";
   }
 }
 
 class BlueBloon extends BloonType {
-  constructor(track) {
+  constructor(world, map, trackIndex) {
     super(
-      track,
+      world,
+      map,
+      trackIndex,
       1,
       2.8,
       new DrawImage(images.bloons.blue, 25, 32),
@@ -1040,9 +1070,11 @@ class BlueBloon extends BloonType {
 }
 
 class GreenBloon extends BloonType {
-  constructor(track) {
+  constructor(world, map, trackIndex) {
     super(
-      track,
+      world,
+      map,
+      trackIndex,
       1,
       3.6,
       new DrawImage(images.bloons.green, 25, 32),
@@ -1054,9 +1086,11 @@ class GreenBloon extends BloonType {
 }
 
 class YellowBloon extends BloonType {
-  constructor(track) {
+  constructor(world, map, trackIndex) {
     super(
-      track,
+      world,
+      map,
+      trackIndex,
       1,
       6.4,
       new DrawImage(images.bloons.yellow, 25, 32),
@@ -1068,9 +1102,11 @@ class YellowBloon extends BloonType {
 }
 
 class PinkBloon extends BloonType {
-  constructor(track) {
+  constructor(world, map, trackIndex) {
     super(
-      track,
+      world,
+      map,
+      trackIndex,
       1,
       7,
       new DrawImage(images.bloons.pink, 25, 32),
@@ -1082,9 +1118,11 @@ class PinkBloon extends BloonType {
 }
 
 class BlackBloon extends BloonType {
-  constructor(track) {
+  constructor(world, map, trackIndex) {
     super(
-      track,
+      world,
+      map,
+      trackIndex,
       1,
       3.6,
       new DrawImage(images.bloons.black, 15, 18),
@@ -1097,9 +1135,11 @@ class BlackBloon extends BloonType {
 }
 
 class WhiteBloon extends BloonType {
-  constructor(track) {
+  constructor(world, map, trackIndex) {
     super(
-      track,
+      world,
+      map,
+      trackIndex,
       1,
       4,
       new DrawImage(images.bloons.white, 15, 18),
@@ -1112,9 +1152,11 @@ class WhiteBloon extends BloonType {
 }
 
 class PurpleBloon extends BloonType {
-  constructor(track) {
+  constructor(world, map, trackIndex) {
     super(
-      track,
+      world,
+      map,
+      trackIndex,
       1,
       6,
       new DrawImage(images.bloons.purple, 25, 32),
@@ -1127,9 +1169,11 @@ class PurpleBloon extends BloonType {
 }
 
 class ZebraBloon extends BloonType {
-  constructor(track) {
+  constructor(world, map, trackIndex) {
     super(
-      track,
+      world,
+      map,
+      trackIndex,
       1,
       3.6,
       new DrawImage(images.bloons.zebra, 25, 32),
@@ -1142,9 +1186,11 @@ class ZebraBloon extends BloonType {
 }
 
 class LeadBloon extends BloonType {
-  constructor(track) {
+  constructor(world, map, trackIndex) {
     super(
-      track,
+      world,
+      map,
+      trackIndex,
       1,
       2,
       new DrawImage(images.bloons.lead, 25, 32),
@@ -1157,9 +1203,11 @@ class LeadBloon extends BloonType {
 }
 
 class RainbowBloon extends BloonType {
-  constructor(track) {
+  constructor(world, map, trackIndex) {
     super(
-      track,
+      world,
+      map,
+      trackIndex,
       1,
       4.4,
       new DrawImage(images.bloons.rainbow, 25, 32),
@@ -1172,9 +1220,11 @@ class RainbowBloon extends BloonType {
 }
 
 class CeramicBloon extends BloonType {
-  constructor(track) {
+  constructor(world, map, trackIndex) {
     super(
-      track,
+      world,
+      map,
+      trackIndex,
       10,
       5,
       new DrawImage(images.bloons.ceramic, 25, 32),
@@ -1225,7 +1275,7 @@ class Tower extends Entity {
     return null;
   }
   fire() {
-    console.log(this.bullet)
+    console.log(this.bullet);
     let bulletToFire = bullet(this.bullet, this);
     bulletToFire.x = this.x;
     bulletToFire.y = this.y;
@@ -1247,18 +1297,11 @@ class TestTower extends Tower {
       type: Bullet,
       damage: 1,
       size: 2,
-      drawer: new DrawShape(
-        "rect",
-        [255, 0, 0],
-        [255, 0, 0],
-        0,
-        4,
-        6
-      ),
+      drawer: new DrawShape("rect", [255, 0, 0], [255, 0, 0], 0, 4, 6),
       speed: 12,
       lifetime: 5,
-      trailColour: [255, 0, 0]
-    }
+      trailColour: [255, 0, 0],
+    };
     super(
       world,
       x,

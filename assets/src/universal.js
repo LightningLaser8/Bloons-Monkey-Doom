@@ -135,6 +135,38 @@ const rewards = {
   },
 };
 
+const maps = {
+  grasslands: {
+    displayName: "Grasslands",
+    difficulty: 0,
+    defaultTrack: 0,
+    numOfTracks: 1,
+    background: "map1",
+    tracks: [
+      {
+        points: [
+          { x: 85, y: 800 },
+          { x: 85, y: 202 },
+          { x: 662, y: 202 },
+          { x: 662, y: 347 },
+          { x: 410, y: 347 },
+          { x: 410, y: 0 },
+        ],
+      },
+    ]
+  }
+}
+
+const names = {
+  difficulties: [
+    "Beginner",
+    "Intermediate",
+    "Advanced",
+    "Expert",
+    "Master"
+  ]
+}
+
 function setupAnimations() {
   ui.anims = {
     startMenuIntro: {
