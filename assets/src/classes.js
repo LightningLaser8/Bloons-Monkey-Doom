@@ -959,6 +959,7 @@ class BloonType extends Entity {
         );
       }
       game.xp += rewards.xp.bloons[this.type];
+      game.inventory.cash += 2
     } else {
       this.world.particles.push(
         new WaveParticle(

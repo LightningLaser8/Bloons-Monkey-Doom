@@ -732,7 +732,7 @@ function drawSidebar() {
     strokeWeight(10);
     stroke(...colours.ui.accent);
     fill(...colours.ui.background, 150);
-    rect(720, 330, 220, 700);
+    rect(715, 330, 230, 700);
     pop();
     button(630, 30, 40, 40, "<-", () => {
       ui.sidebar = "hidden";
