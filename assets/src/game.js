@@ -36,6 +36,8 @@ let game = {
     },
     /** Powerups in storage */
     powerups: {},
+    /** Is lighting enabled? */
+    lighting: true,
   },
   /** Experience points */
   xp: 0,
@@ -85,7 +87,7 @@ const tracks = {
 
 game.track = tracks.test;
 
-let particleLayer;
+let particleLayer, lightingLayer;
 
 function preload() {
   //load all second-level images
@@ -101,6 +103,7 @@ function preload() {
 function setup() {
   createCanvas(800, 800);
   particleLayer = createGraphics(800, 800);
+  lightingLayer = createGraphics(800, 800);
   rectMode(CENTER);
   imageMode(CENTER);
   textAlign(CENTER, CENTER);
@@ -109,7 +112,7 @@ function setup() {
 
   setupAnimations();
 
-  game.inventory.cash += 10
+  game.inventory.cash += 10;
 }
 
 function makeBloon(track, type = RedBloon) {
@@ -201,6 +204,7 @@ function drawGame() {
   drawEntities();
   drawBullets();
   drawParticles();
+  drawLighting();
 }
 
 function tickParticles() {
@@ -220,11 +224,13 @@ function drawEntities() {
     e.draw();
   }
 }
+
 function drawBullets() {
   for (let b of world.bullets) {
     b.show();
   }
 }
+
 function drawParticles() {
   push();
   particleLayer.clear();
@@ -235,6 +241,41 @@ function drawParticles() {
   }
   image(particleLayer, 400, 400, 800, 800);
   pop();
+}
+
+function drawLighting() {
+  if (game.lighting) {
+    let lightableObjects = [...world.particles, ...world.bullets];
+    push();
+    lightingLayer.clear();
+    lightingLayer.blendMode(ADD);
+    lightingLayer.noStroke();
+    for (let l of lightableObjects) {
+      if (l.light) {
+        let light = l.light;
+        lightingLayer.fill(
+          light.colour[0],
+          light.colour[1],
+          light.colour[2],
+          light.luminance / 10
+        );
+        for (let mult = 1; mult > 0.1; mult -= 0.1)
+          lightingLayer.circle(l.x, l.y, light.radius * mult);
+        console.log(
+          "light at " + l.x + ", " + l.y + " with radius " + light.radius
+        );
+      }
+    }
+    image(lightingLayer, 400, 400, 800, 800);
+    pop();
+  }
+}
+
+function createLightOn(object, radius, luminance, colour = [255, 255, 255]) {
+  const light = { colour: colour, radius: radius, luminance: luminance };
+  Object.defineProperty(object, "light", {
+    value: light,
+  });
 }
 
 function tickEntities() {
