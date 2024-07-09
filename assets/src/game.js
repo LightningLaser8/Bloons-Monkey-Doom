@@ -44,7 +44,7 @@ let game = {
   /** XP level */
   level: 0,
   /** Map the game is in. Replaces tracks. */
-  map: null
+  map: null,
 };
 /**Contains properties relating to the user interface*/
 let ui = {
@@ -56,7 +56,7 @@ let ui = {
   anims: {},
   font: null,
   mapPageDifficulty: 0,
-  mapMenuPage: 1
+  mapMenuPage: 1,
 };
 
 /**Represents the current in-world mouse.*/
@@ -73,9 +73,10 @@ let waitingForKeyRelease = false;
 
 let { world, player, state } = game;
 
-let sortedMaps
+let sortedMaps;
 
-game.map = maps.grasslands
+game.map = maps.grasslands;
+loadTowersFrom(maps.grasslands)
 
 let particleLayer, lightingLayer;
 
@@ -102,23 +103,15 @@ function setup() {
 
   setupAnimations();
 
-  game.inventory.cash += 10;
-
-  world.towers.push(new TestTower(world, 382, 230))
+  game.inventory.cash += 100;
 
   //Sort maps
-  sortedMaps = [
-    [],
-    [],
-    [],
-    [],
-    []
-  ]
-  for(let mapName in maps){
+  sortedMaps = [[], [], [], [], []];
+  for (let mapName in maps) {
     let map = maps[mapName];
-    sortedMaps[map.difficulty].push(map)
+    sortedMaps[map.difficulty].push(map);
   }
-  console.log(sortedMaps)
+  console.log(sortedMaps);
 }
 
 /** Makes a bloon on the current map. Optionally takes a parameter for the track index to place the bloon on. */
@@ -297,7 +290,7 @@ function tickEntities() {
         b.attributableEntity &&
         b.attributableEntity != e &&
         b.collides
-      ) {
+       && !b.remove) {
         if (b.pierce <= 0) {
           b.onHit(e, e.x, e.y);
           if (b.damage > 0) {
@@ -391,12 +384,12 @@ function startMenu() {
 
   //Start button
   {
-    push()
-    noStroke()
-    fill(...colours.ui.buttons.contrast)
-    textSize(30)
-    text("Map: "+game.map.displayName, 400, 770)
-    pop()
+    push();
+    noStroke();
+    fill(...colours.ui.buttons.contrast);
+    textSize(30);
+    text("Map: " + game.map.displayName, 400, 770);
+    pop();
   }
   button(340, 700, 150, 80, "Start", () => {
     state = "game";
@@ -408,49 +401,50 @@ function startMenu() {
   pop();
 }
 
-function selectMenu(){
-  background(colours.ui.background)
+function selectMenu() {
+  background(colours.ui.background);
 
   {
     //for(let difficulty = 0; difficulty < sortedMaps.length; difficulty ++){
-    let difficulty = ui.mapPageDifficulty
-      push()
-      let showX = 160, showY = 160
-      noStroke()
-      fill(...colours.ui.buttons.contrast)
-      textSize(50)
-      text(names.difficulties[difficulty]+" Maps", 400, 40)
-      let len = Math.min(6, sortedMaps[difficulty].length)
-      for(let mapIndex = 0; mapIndex < len; mapIndex ++){
-        let map = sortedMaps[difficulty][mapIndex + 6 * (ui.mapMenuPage - 1)]
-        if(map){
-          mapButton(showX, showY, map)
-        }
-        showX += 240
-        if(showX > 720){
-          showX = 160
-          showY += 260
-        }
-        if(showY > 720){
-
-          break;
-        }
+    let difficulty = ui.mapPageDifficulty;
+    push();
+    let showX = 160,
+      showY = 160;
+    noStroke();
+    fill(...colours.ui.buttons.contrast);
+    textSize(50);
+    text(names.difficulties[difficulty] + " Maps", 400, 40);
+    let len = Math.min(6, sortedMaps[difficulty].length);
+    for (let mapIndex = 0; mapIndex < len; mapIndex++) {
+      let map = sortedMaps[difficulty][mapIndex + 6 * (ui.mapMenuPage - 1)];
+      if (map) {
+        mapButton(showX, showY, map);
       }
-      pop()
+      showX += 240;
+      if (showX > 720) {
+        showX = 160;
+        showY += 260;
+      }
+      if (showY > 720) {
+        break;
+      }
+    }
+    pop();
     //}
   }
 
-  if(ui.mapMenuPage < Math.round(sortedMaps[ui.mapPageDifficulty].length/6)){
+  if (
+    ui.mapMenuPage < Math.round(sortedMaps[ui.mapPageDifficulty].length / 6)
+  ) {
     button(750, 700, 40, 80, ">", () => {
       ui.mapMenuPage++;
     });
   }
-  if(ui.mapMenuPage > 1){
+  if (ui.mapMenuPage > 1) {
     button(50, 700, 40, 80, "<", () => {
       ui.mapMenuPage--;
     });
   }
-  
 }
 
 function showTitleAt(x, y) {
@@ -485,7 +479,7 @@ function showTitleAt(x, y) {
   text("Bloons", x, y + 32);
 }
 
-/** 
+/**
  * Creates a button for 1 frame. When pressed, activates the `onPress` function parameter. If the `draw` parameter is false, then the button won't be visible.
  * Can only display text
  */
@@ -540,7 +534,7 @@ function button(
   return false;
 }
 
-/** 
+/**
  * A button that shows an image instead of text. Identical to a button made with `button`.
  */
 function imageButton(
@@ -568,7 +562,7 @@ function imageButton(
       noFill();
       rect(x, y, width, height);
       fill(...colours.ui.buttons.highlight);
-      tint(128)
+      tint(128);
     }
   } else {
     if (draw) {
@@ -600,22 +594,31 @@ function captionedImageButton(
   onPress = () => {},
   draw = true
 ) {
-  push()
-  imageButton(x, y, width, height, shownImage, onPress, draw)
+  push();
+  imageButton(x, y, width, height, shownImage, onPress, draw);
   textSize(30); //starting point for checks
   textSize(((textSize() * width) / textWidth(shownText)) * 0.8);
   fill(...colours.ui.buttons.contrast);
   noStroke();
   textAlign(CENTER, CENTER);
-  text(shownText, x, y + textSize() * 1.12 + height/2/*, width, height*/);
-  pop()
+  text(shownText, x, y + textSize() * 1.12 + height / 2 /*, width, height*/);
+  pop();
 }
 
-function mapButton(x, y, map){
-  captionedImageButton(x, y, 200, 200, images.maps[map.background], map.displayName, ()=>{
-    game.map = map
-    state = "start-menu"
-  })
+function mapButton(x, y, map) {
+  captionedImageButton(
+    x,
+    y,
+    200,
+    200,
+    images.maps[map.background],
+    map.displayName,
+    () => {
+      game.map = map;
+      loadTowersFrom(game.map);
+      state = "start-menu";
+    }
+  );
 }
 
 function drawInGameUI() {
@@ -669,7 +672,7 @@ function drawInGameUI() {
     noStroke();
     textSize(20);
     textSize(
-      Math.min(30, (textSize() * 100) / textWidth("$" + game.inventory.cash)) *
+      Math.min(30, (textSize() * 100) / textWidth(game.inventory.cash)) *
         0.8
     );
     textAlign(LEFT, CENTER);
@@ -678,7 +681,7 @@ function drawInGameUI() {
     textSize(
       Math.min(
         30,
-        (textSize() * 100) / textWidth("$" + game.inventory.bloon_gold)
+        (textSize() * 100) / textWidth(game.inventory.bloon_gold)
       ) * 0.8
     );
     textAlign(LEFT, CENTER);
@@ -689,10 +692,11 @@ function drawInGameUI() {
   }
   //XP and level
   {
+    game.level = game.xp //temporary
     push();
     noFill();
     stroke(...colours.ui.accent);
-    strokeWeight(10);
+    strokeWeight(5);
     rect(40, 40, 90, 90);
     fill(colours.ui.xp);
     stroke(255);
@@ -981,5 +985,13 @@ function splashDamageInstance(
       }
     }
     e.damage(roundNum(damageToTake, 0));
+  }
+}
+
+function loadTowersFrom(map) {
+  world.towers.splice(0, world.towers.length);
+  for (let tower of map.towers) {
+    let createdTower = new towers[tower.type](world, tower.x, tower.y);
+    world.towers.push(createdTower);
   }
 }

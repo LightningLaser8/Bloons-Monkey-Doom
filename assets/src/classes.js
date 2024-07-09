@@ -256,6 +256,7 @@ class Bullet {
     //Trails
     this.trailColour = [255, 220, 180, 255];
     this.hasTrail = true;
+    this.trailSize = null;
     //Interval
     this.intervalBullet = null;
     this.intervalSpread = 0;
@@ -329,9 +330,9 @@ class Bullet {
                   "circle",
                   this.trailColour,
                   this.trailColour,
-                  this.size * 1.9,
+                  (this.trailSize ?? this.size) * 1.9,
                   0,
-                  this.size * 1.9,
+                  (this.trailSize ?? this.size) * 1.9,
                   0
                 )
               );
@@ -847,7 +848,7 @@ class Entity {
       this.dynamicVelocity.direction
     ).getScaledVector(this.dynamicVelocity.speed * time);
     let thisVector = new Vector(this.x, this.y);
-    return thisVector.add(moveVector);
+    return thisVector.subtract(moveVector);
   }
   getPredictedPositionDistSpd(distance, speed) {
     return this.getPredictedPositionTime(distance / speed);
@@ -857,7 +858,7 @@ class Entity {
       this.dynamicVelocity.direction
     ).getScaledVector((this.dynamicVelocity.speed * distance) / speed);
     let thisVector = new Vector(this.x, this.y);
-    return thisVector.add(moveVector.getScaledVector(adjustment));
+    return thisVector.subtract(moveVector.getScaledVector(adjustment));
   }
   draw() {
     if (this.showHealthbar && this.health < this.maxHealth) {
@@ -949,14 +950,15 @@ class BloonType extends Entity {
             "rhombus",
             colours.ui.xp,
             colours.ui.xp,
+            20,
+            20,
             10,
             0,
-            20,
-            20,
             0
           )
         );
       }
+      game.xp += rewards.xp.bloons[this.type];
     } else {
       this.world.particles.push(
         new WaveParticle(
@@ -1037,6 +1039,8 @@ class BloonType extends Entity {
   }
 }
 
+const baseSpeed = 1.2;
+
 class RedBloon extends BloonType {
   constructor(world, map, trackIndex) {
     super(
@@ -1044,7 +1048,7 @@ class RedBloon extends BloonType {
       map,
       trackIndex,
       1,
-      2,
+      baseSpeed,
       new DrawImage(images.bloons.red, 25, 32),
       10,
       null
@@ -1060,7 +1064,7 @@ class BlueBloon extends BloonType {
       map,
       trackIndex,
       1,
-      2.8,
+      baseSpeed * 1.4,
       new DrawImage(images.bloons.blue, 25, 32),
       10,
       RedBloon
@@ -1076,7 +1080,7 @@ class GreenBloon extends BloonType {
       map,
       trackIndex,
       1,
-      3.6,
+      baseSpeed * 1.8,
       new DrawImage(images.bloons.green, 25, 32),
       10,
       BlueBloon
@@ -1092,7 +1096,7 @@ class YellowBloon extends BloonType {
       map,
       trackIndex,
       1,
-      6.4,
+      baseSpeed * 3.2,
       new DrawImage(images.bloons.yellow, 25, 32),
       10,
       GreenBloon
@@ -1108,7 +1112,7 @@ class PinkBloon extends BloonType {
       map,
       trackIndex,
       1,
-      7,
+      baseSpeed * 3.5,
       new DrawImage(images.bloons.pink, 25, 32),
       10,
       YellowBloon
@@ -1124,7 +1128,7 @@ class BlackBloon extends BloonType {
       map,
       trackIndex,
       1,
-      3.6,
+      baseSpeed * 1.8,
       new DrawImage(images.bloons.black, 15, 18),
       7,
       PinkBloon,
@@ -1141,7 +1145,7 @@ class WhiteBloon extends BloonType {
       map,
       trackIndex,
       1,
-      4,
+      baseSpeed * 2,
       new DrawImage(images.bloons.white, 15, 18),
       7,
       PinkBloon,
@@ -1158,7 +1162,7 @@ class PurpleBloon extends BloonType {
       map,
       trackIndex,
       1,
-      6,
+      baseSpeed * 3,
       new DrawImage(images.bloons.purple, 25, 32),
       10,
       PinkBloon,
@@ -1175,7 +1179,7 @@ class ZebraBloon extends BloonType {
       map,
       trackIndex,
       1,
-      3.6,
+      baseSpeed * 1.8,
       new DrawImage(images.bloons.zebra, 25, 32),
       10,
       WhiteBloon,
@@ -1192,7 +1196,7 @@ class LeadBloon extends BloonType {
       map,
       trackIndex,
       1,
-      2,
+      baseSpeed,
       new DrawImage(images.bloons.lead, 25, 32),
       10,
       BlackBloon,
@@ -1209,7 +1213,7 @@ class RainbowBloon extends BloonType {
       map,
       trackIndex,
       1,
-      4.4,
+      baseSpeed * 2.2,
       new DrawImage(images.bloons.rainbow, 25, 32),
       10,
       ZebraBloon,
@@ -1226,7 +1230,7 @@ class CeramicBloon extends BloonType {
       map,
       trackIndex,
       10,
-      5,
+      baseSpeed * 2.5,
       new DrawImage(images.bloons.ceramic, 25, 32),
       10,
       RainbowBloon,
@@ -1269,7 +1273,13 @@ class Tower extends Entity {
       }
     }
     if (target) {
-      this.rotation = this.getPos().angleTo(target.getPos());
+      this.rotation = this.getPos().angleTo(
+        target.getAdjustedPredictionDistSpd(
+          minDist - target.size,
+          this.bullet.speed ?? 10,
+          2
+        )
+      );
       return target;
     }
     return null;
@@ -1285,35 +1295,40 @@ class Tower extends Entity {
   }
   draw() {
     super.draw();
-    noStroke();
-    fill(100, 100);
-    circle(this.x, this.y, this.range * 2);
+    if (this.getPos().distanceTo(new Vector(mouseX, mouseY)) < this.size) {
+      noStroke();
+      fill(100, 100);
+      circle(this.x, this.y, this.range * 2);
+    }
   }
 }
 
-class TestTower extends Tower {
-  constructor(world, x, y) {
-    let bulletToAdd = {
-      type: Bullet,
-      damage: 1,
-      size: 2,
-      drawer: new DrawShape("rect", [255, 0, 0], [255, 0, 0], 0, 4, 6),
-      speed: 12,
-      lifetime: 5,
-      trailColour: [255, 0, 0],
-    };
-    super(
-      world,
-      x,
-      y,
-      new DrawShape("rect", [255, 0, 0], [0, 0, 0], 3, 10, 20),
-      bulletToAdd,
-      10,
-      60,
-      20
-    );
-  }
-}
+const towers = {
+  TestTower: class TestTower extends Tower {
+    constructor(world, x, y) {
+      let bulletToAdd = {
+        type: Bullet,
+        damage: 1,
+        size: 10,
+        drawer: new DrawShape("rect", [255, 0, 0], [255, 0, 0], 0, 4, 6),
+        speed: 15,
+        lifetime: 7,
+        trailColour: [255, 0, 0],
+        trailSize: 2,
+      };
+      super(
+        world,
+        x,
+        y,
+        new DrawShape("rect", [255, 0, 0], [0, 0, 0], 3, 10, 20),
+        bulletToAdd,
+        30,
+        100,
+        20
+      );
+    }
+  },
+};
 
 function logPoint(point) {
   return "(x: " + point.x + ", y: " + point.y + ")";

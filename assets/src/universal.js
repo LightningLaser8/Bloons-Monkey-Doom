@@ -153,19 +153,20 @@ const maps = {
           { x: 410, y: 0 },
         ],
       },
-    ]
-  }
-}
+    ],
+    towers: [
+      {
+        type: "TestTower",
+        x: 122,
+        y: 238,
+      },
+    ],
+  },
+};
 
 const names = {
-  difficulties: [
-    "Beginner",
-    "Intermediate",
-    "Advanced",
-    "Expert",
-    "Master"
-  ]
-}
+  difficulties: ["Beginner", "Intermediate", "Advanced", "Expert", "Master"],
+};
 
 function setupAnimations() {
   ui.anims = {
