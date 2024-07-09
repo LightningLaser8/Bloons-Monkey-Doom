@@ -100,8 +100,8 @@ const prices = {
       black: 25,
       zebra: 55,
       lead: 55,
-      rainbow: 150,
-      ceramic: 400,
+      rainbow: 125,
+      ceramic: 300,
     },
   },
   /** Pricing for anything costing the other currency. */

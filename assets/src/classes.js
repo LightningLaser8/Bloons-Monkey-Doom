@@ -959,7 +959,7 @@ class BloonType extends Entity {
         );
       }
       game.xp += rewards.xp.bloons[this.type];
-      game.inventory.cash += 2
+      game.inventory.cash += 4; //not too sure about this
     } else {
       this.world.particles.push(
         new WaveParticle(
@@ -1242,7 +1242,7 @@ class CeramicBloon extends BloonType {
 }
 
 class Tower extends Entity {
-  _targetPriority;
+  _targetPriority = "first"; //first, last, close, far, strong
   _reloadLeft = 0;
   constructor(world, x, y, drawer, bullet, reload, range, size) {
     super(world, x, y, 1000, 0, drawer, size);
@@ -1262,21 +1262,66 @@ class Tower extends Entity {
     }
   }
   findTarget() {
-    let target,
-      minDist = Infinity;
-    for (let e of this.world.bloons) {
-      let dist = this.getPos().distanceTo(e.getPos());
-      if (dist <= this.range + e.size) {
-        if (dist < minDist) {
-          minDist = dist;
-          target = e;
+    let target, finalDist = 0;
+    if(this._targetPriority === "close"){
+      let minDist = Infinity
+      for (let e of this.world.bloons) {
+        let dist = this.getPos().distanceTo(e.getPos());
+        if (dist <= this.range + e.size) {
+          if (dist < minDist) {
+            minDist = dist;
+            finalDist = minDist
+            target = e;
+          }
         }
       }
     }
+    else if(this._targetPriority === "far"){
+      let maxDist = 0
+      for (let e of this.world.bloons) {
+        let dist = this.getPos().distanceTo(e.getPos());
+        if (dist <= this.range + e.size) {
+          if (dist > maxDist) {
+            maxDist = dist;
+            finalDist = maxDist
+            target = e;
+          }
+        }
+      }
+    }
+    else if(this._targetPriority === "last"){
+      let minProgress = Infinity
+      for (let e of this.world.bloons) {
+        let dist = this.getPos().distanceTo(e.getPos());
+        if (dist <= this.range + e.size) {
+          if (e.progress < minProgress) {
+            minProgress = e.progress;
+            finalDist = dist
+            target = e;
+          }
+        }
+      }
+    }
+    else if(this._targetPriority === "first"){
+      let maxProgress = 0
+      for (let e of this.world.bloons) {
+        let dist = this.getPos().distanceTo(e.getPos());
+        if (dist <= this.range + e.size) {
+          if (e.progress > maxProgress) {
+            maxProgress = e.progress;
+            finalDist = dist
+            target = e;
+          }
+        }
+      }
+    }
+    
+    
+    //Actually point at target
     if (target) {
       this.rotation = this.getPos().angleTo(
         target.getAdjustedPredictionDistSpd(
-          minDist - target.size,
+          finalDist - target.size,
           this.bullet.speed ?? 10,
           2
         )
