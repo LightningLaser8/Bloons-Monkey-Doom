@@ -1180,7 +1180,7 @@ class CeramicBloon extends BloonType {
       5,
       new DrawImage(images.bloons.ceramic, 25, 32),
       10,
-      ZebraBloon,
+      RainbowBloon,
       2
     );
     this.type = "ceramic";
