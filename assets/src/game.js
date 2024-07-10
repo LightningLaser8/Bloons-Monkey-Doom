@@ -284,13 +284,7 @@ function tickEntities() {
   for (let e of world.bloons) {
     e.tick();
     for (let b of world.bullets) {
-      if (
-        (b.getPos().distanceTo(e.getPos()) < e.size + b.size ||
-          b.laserCollide(e)) &&
-        b.attributableEntity &&
-        b.attributableEntity != e &&
-        b.collides
-       && !b.remove) {
+      if (b.collidesWith(e)) {
         if (b.pierce <= 0) {
           b.onHit(e, e.x, e.y);
           if (b.damage > 0) {

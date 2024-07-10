@@ -436,6 +436,16 @@ class Bullet {
       }
     }
   }
+  collidesWith(e) {
+    return (
+      (this.getPos().distanceTo(e.getPos()) < e.size + this.size ||
+        this.laserCollide(e)) &&
+      this.attributableEntity &&
+      this.attributableEntity != e &&
+      this.collides &&
+      !this.remove
+    );
+  }
   moveTo(x, y) {
     this.x = x;
     this.y = y;
@@ -616,6 +626,23 @@ class ContinuousLaserBullet extends LaserBullet {
     //this.damage = Math.round(this.originalDamage * (((this.currentSize / this.size) + ((this.length - this.currentLength) / this.length)) / 2))
 
     this.pierced = [];
+  }
+}
+
+class PointBullet extends Bullet {
+  step() {}
+  init() {
+    super.init();
+    this.speed = 0;
+    this.lifetime = 1;
+    this.hasTrail = false;
+    if(this.directedAt){
+      this.x = this.directedAt.x;
+      this.y = this.directedAt.y;
+    }
+  }
+  collidesWith(e) {
+    return e === this.directedAt;
   }
 }
 
@@ -1269,7 +1296,7 @@ class Tower extends Entity {
   static targetingPriorities = ["first", "last", "close", "far", "strong"];
   _targetPriority = "first"; //first, last, close, far, strong
   _reloadLeft = 0;
-  _target = null
+  _target = null;
   constructor(world, x, y, drawer, bullet, reload, range, size) {
     super(world, x, y, 1000, 0, drawer, size);
     this.bullet = bullet;
@@ -1357,13 +1384,16 @@ class Tower extends Entity {
     }
 
     //Actually point at target
-    this._target = target
+    this._target = target;
     if (target) {
       let aimAt = target.getAdjustedPredictionDistSpd(
         finalDist - target.size,
         this.bullet.speed ?? 10,
         2
       );
+      if(this.bullet.type === PointBullet){
+        aimAt = target.getPos()
+      }
       this.rotation = this.getPos().angleTo(aimAt);
       this.world.particles.push(
         new ShapeParticle(
@@ -1463,12 +1493,10 @@ const towers = {
   TestSniper: class TestSniper extends Tower {
     constructor(world, x, y) {
       let bulletToAdd = {
-        type: Bullet,
+        type: PointBullet,
         damage: 7,
         size: 10,
         drawer: new DrawShape("rect", [255, 0, 0], [255, 0, 0], 0, 4, 6),
-        speed: 60,
-        lifetime: 30,
         trailColour: [255, 0, 0],
         trailSize: 2,
       };
