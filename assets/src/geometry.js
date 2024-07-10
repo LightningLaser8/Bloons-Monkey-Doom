@@ -19,6 +19,7 @@ function trueClone(obj){
 
 function RADShape(shape, shape_x, shape_y, shape_width, shape_height, shape_angle, context = globalThis) {
   context.push()
+  context.rectMode(CENTER)
   context.translate(shape_x, shape_y);
   context.rotate(shape_angle);
   switch (shape) {

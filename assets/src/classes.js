@@ -636,7 +636,7 @@ class PointBullet extends Bullet {
     this.speed = 0;
     this.lifetime = 1;
     this.hasTrail = false;
-    if(this.directedAt){
+    if (this.directedAt) {
       this.x = this.directedAt.x;
       this.y = this.directedAt.y;
     }
@@ -1391,8 +1391,8 @@ class Tower extends Entity {
         this.bullet.speed ?? 10,
         2
       );
-      if(this.bullet.type === PointBullet){
-        aimAt = target.getPos()
+      if (this.bullet.type === PointBullet) {
+        aimAt = target.getPos();
       }
       this.rotation = this.getPos().angleTo(aimAt);
       this.world.particles.push(
@@ -1499,6 +1499,27 @@ const towers = {
         drawer: new DrawShape("rect", [255, 0, 0], [255, 0, 0], 0, 4, 6),
         trailColour: [255, 0, 0],
         trailSize: 2,
+        onHit: function (entityHit, hitX, hitY) {
+          for (let i = 0; i < 5; i++) {
+            entityHit.world.particles.push(
+              new ShapeParticle(
+                hitX,
+                hitY,
+                radians(rnd(0, 360)),
+                30,
+                2,
+                0.1,
+                "rhombus",
+                [255, 255, 0],
+                [255, 255, 0, 0],
+                50,
+                50,
+                20,
+                0
+              )
+            );
+          }
+        },
       };
       super(
         world,
