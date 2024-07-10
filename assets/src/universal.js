@@ -160,6 +160,12 @@ const maps = {
         x: 122,
         y: 238,
       },
+      {
+        type: "TestSniper",
+        x: 563,
+        y: 105,
+        target: "strong"
+      },
     ],
   },
 };

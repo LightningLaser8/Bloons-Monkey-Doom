@@ -294,7 +294,7 @@ function tickEntities() {
         if (b.pierce <= 0) {
           b.onHit(e, e.x, e.y);
           if (b.damage > 0) {
-            e.damage(b.damage);
+            e.damage(b.damage, b.attributableEntity);
           }
           if (!(b.splashDamage > 0 && b.splashRadius > 0)) {
             b.applyStatusesTo(e);
@@ -304,7 +304,7 @@ function tickEntities() {
           if (!b.pierced.includes(e)) {
             b.onHit(e, e.x, e.y);
             if (b.damage > 0) {
-              e.damage(b.damage);
+              e.damage(b.damage, b.attributableEntity);
             }
             b.applyStatusesTo(e);
             b.pierce--;
@@ -992,6 +992,7 @@ function loadTowersFrom(map) {
   world.towers.splice(0, world.towers.length);
   for (let tower of map.towers) {
     let createdTower = new towers[tower.type](world, tower.x, tower.y);
+    createdTower.setTargetingPrio(tower.target ?? "first")
     world.towers.push(createdTower);
   }
 }

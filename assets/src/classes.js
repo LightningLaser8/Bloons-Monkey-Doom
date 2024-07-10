@@ -889,6 +889,7 @@ class BloonType extends Entity {
   progress = 0;
   leaked = false;
   type = "red";
+  damageSource = null;
   constructor(
     world,
     map,
@@ -922,6 +923,15 @@ class BloonType extends Entity {
     this.trackIndex = trackIndex;
     this.child = child;
     this.numChildren = numChildren;
+  }
+  damage(amount, damageSource, hideParticles = true) {
+    this.damageSource = damageSource;
+    if (damageSource != null) {
+      if (damageSource instanceof Tower) {
+        damageSource.pops += Math.min(this.health, amount);
+      }
+    }
+    super.damage(amount);
   }
   removeExt() {
     if (this.leaked) {
@@ -1008,7 +1018,7 @@ class BloonType extends Entity {
         child.trackPoint = this.trackPoint;
         child.statuses = JSON.parse(JSON.stringify(this.statuses));
         this.world.bloons.push(child);
-        child.damage(damageToDeal);
+        child.damage(damageToDeal, this.damageSource);
       }
     }
   }
@@ -1242,6 +1252,7 @@ class CeramicBloon extends BloonType {
 }
 
 class Tower extends Entity {
+  static targetingPriorities = ["first", "last", "close", "far", "strong"];
   _targetPriority = "first"; //first, last, close, far, strong
   _reloadLeft = 0;
   constructor(world, x, y, drawer, bullet, reload, range, size) {
@@ -1249,6 +1260,10 @@ class Tower extends Entity {
     this.bullet = bullet;
     this.reload = reload;
     this.range = range;
+    this.displayName = "Tower";
+    this.tier = "0";
+    this.path = "Only";
+    this.pops = 0;
   }
   tickExt() {
     let target = this.findTarget();
@@ -1262,61 +1277,58 @@ class Tower extends Entity {
     }
   }
   findTarget() {
-    let target, finalDist = 0;
-    if(this._targetPriority === "close"){
-      let minDist = Infinity
+    let target,
+      finalDist = 0;
+    if (this._targetPriority === "close") {
+      let minDist = Infinity;
       for (let e of this.world.bloons) {
         let dist = this.getPos().distanceTo(e.getPos());
         if (dist <= this.range + e.size) {
           if (dist < minDist) {
             minDist = dist;
-            finalDist = minDist
+            finalDist = minDist;
             target = e;
           }
         }
       }
-    }
-    else if(this._targetPriority === "far"){
-      let maxDist = 0
+    } else if (this._targetPriority === "far") {
+      let maxDist = 0;
       for (let e of this.world.bloons) {
         let dist = this.getPos().distanceTo(e.getPos());
         if (dist <= this.range + e.size) {
           if (dist > maxDist) {
             maxDist = dist;
-            finalDist = maxDist
+            finalDist = maxDist;
             target = e;
           }
         }
       }
-    }
-    else if(this._targetPriority === "last"){
-      let minProgress = Infinity
+    } else if (this._targetPriority === "last") {
+      let minProgress = Infinity;
       for (let e of this.world.bloons) {
         let dist = this.getPos().distanceTo(e.getPos());
         if (dist <= this.range + e.size) {
           if (e.progress < minProgress) {
             minProgress = e.progress;
-            finalDist = dist
+            finalDist = dist;
             target = e;
           }
         }
       }
-    }
-    else if(this._targetPriority === "first"){
-      let maxProgress = 0
+    } else if (this._targetPriority === "first") {
+      let maxProgress = 0;
       for (let e of this.world.bloons) {
         let dist = this.getPos().distanceTo(e.getPos());
         if (dist <= this.range + e.size) {
           if (e.progress > maxProgress) {
             maxProgress = e.progress;
-            finalDist = dist
+            finalDist = dist;
             target = e;
           }
         }
       }
     }
-    
-    
+
     //Actually point at target
     if (target) {
       this.rotation = this.getPos().angleTo(
@@ -1345,6 +1357,33 @@ class Tower extends Entity {
       noStroke();
       fill(100, 100);
       circle(this.x, this.y, this.range * 2);
+      fill(255);
+      stroke(0);
+      strokeWeight(1);
+      textSize(13);
+      text(this.displayName, this.x, this.y - this.size - textSize() * 3.12);
+      text(
+        this.path + " path, Tier " + this.tier,
+        this.x,
+        this.y - this.size - textSize() * 2.12
+      );
+      text(
+        "Targeting: " + this._targetPriority,
+        this.x,
+        this.y - this.size - textSize() * 1.12
+      );
+      text(this.pops + " pops", this.x, this.y + this.size + textSize() * 1.12);
+    }
+  }
+  setTargetingPrio(prio) {
+    if (Tower.targetingPriorities.includes(prio)) {
+      this._targetPriority = prio;
+    } else {
+      console.warn(
+        "Targeting priority '" +
+          prio +
+          "' does not exist, or has not been implemented yet."
+      );
     }
   }
 }
@@ -1370,8 +1409,35 @@ const towers = {
         bulletToAdd,
         30,
         100,
-        20
+        10
       );
+      this.displayName = "Test Tower";
+    }
+  },
+  TestSniper: class TestSniper extends Tower {
+    constructor(world, x, y) {
+      let bulletToAdd = {
+        type: Bullet,
+        damage: 7,
+        size: 10,
+        drawer: new DrawShape("rect", [255, 0, 0], [255, 0, 0], 0, 4, 6),
+        speed: 30,
+        lifetime: 7,
+        trailColour: [255, 0, 0],
+        trailSize: 2,
+      };
+      super(
+        world,
+        x,
+        y,
+        new DrawShape("rect", [255, 0, 0], [0, 0, 0], 3, 10, 20),
+        bulletToAdd,
+        90,
+        1000,
+        10
+      );
+      this.displayName = "Test Sniper";
+      this.tier = 2;
     }
   },
 };
