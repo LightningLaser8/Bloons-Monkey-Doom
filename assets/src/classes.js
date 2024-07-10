@@ -284,6 +284,7 @@ class Bullet {
     this.#intervalCounter = 0;
     this.maxLife = 0;
     this.attributableEntity = null;
+    this.directedAt = null;
   }
   init() {
     this.direction =
@@ -701,7 +702,7 @@ class Entity {
     if (this.speed != 0) {
       let now = new Vector(this.x, this.y);
       let distMoved = now.distanceTo(this.#previousPos);
-      let angle = this.#previousPos.subtract(now).getAngle() - HALF_PI;
+      let angle = this.#previousPos.subtract(now).getAngle();
       let dt = time ? time : 1;
       let vel = distMoved / dt;
       this.dynamicVelocity.speed = vel;
@@ -888,8 +889,9 @@ class BloonType extends Entity {
   trackPoint = 0;
   progress = 0;
   leaked = false;
-  type = "red";
   damageSource = null;
+  static type = "red";
+  static difficulty = -1;
   constructor(
     world,
     map,
@@ -968,7 +970,7 @@ class BloonType extends Entity {
           )
         );
       }
-      game.xp += rewards.xp.bloons[this.type];
+      game.xp += rewards.xp.bloons[this.constructor.type];
       game.inventory.cash += 4; //not too sure about this
     } else {
       this.world.particles.push(
@@ -994,8 +996,8 @@ class BloonType extends Entity {
             rndScl(3, 5, 10),
             0.25,
             "square",
-            colours.bloons[this.type],
-            colours.bloons[this.type],
+            colours.bloons[this.constructor.type],
+            colours.bloons[this.constructor.type],
             5,
             0,
             5,
@@ -1053,6 +1055,8 @@ class BloonType extends Entity {
 const baseSpeed = 1.2;
 
 class RedBloon extends BloonType {
+  static type = "red";
+  static difficulty = 0;
   constructor(world, map, trackIndex) {
     super(
       world,
@@ -1064,11 +1068,12 @@ class RedBloon extends BloonType {
       10,
       null
     );
-    this.type = "red";
   }
 }
 
 class BlueBloon extends BloonType {
+  static type = "blue";
+  static difficulty = 1;
   constructor(world, map, trackIndex) {
     super(
       world,
@@ -1080,11 +1085,12 @@ class BlueBloon extends BloonType {
       10,
       RedBloon
     );
-    this.type = "blue";
   }
 }
 
 class GreenBloon extends BloonType {
+  static type = "green";
+  static difficulty = 2;
   constructor(world, map, trackIndex) {
     super(
       world,
@@ -1096,11 +1102,12 @@ class GreenBloon extends BloonType {
       10,
       BlueBloon
     );
-    this.type = "green";
   }
 }
 
 class YellowBloon extends BloonType {
+  static type = "yellow";
+  static difficulty = 3;
   constructor(world, map, trackIndex) {
     super(
       world,
@@ -1112,11 +1119,12 @@ class YellowBloon extends BloonType {
       10,
       GreenBloon
     );
-    this.type = "yellow";
   }
 }
 
 class PinkBloon extends BloonType {
+  static type = "pink";
+  static difficulty = 4;
   constructor(world, map, trackIndex) {
     super(
       world,
@@ -1128,11 +1136,12 @@ class PinkBloon extends BloonType {
       10,
       YellowBloon
     );
-    this.type = "pink";
   }
 }
 
 class BlackBloon extends BloonType {
+  static type = "black";
+  static difficulty = 5;
   constructor(world, map, trackIndex) {
     super(
       world,
@@ -1145,11 +1154,12 @@ class BlackBloon extends BloonType {
       PinkBloon,
       2
     );
-    this.type = "black";
   }
 }
 
 class WhiteBloon extends BloonType {
+  static type = "white";
+  static difficulty = 5;
   constructor(world, map, trackIndex) {
     super(
       world,
@@ -1162,11 +1172,12 @@ class WhiteBloon extends BloonType {
       PinkBloon,
       2
     );
-    this.type = "white";
   }
 }
 
 class PurpleBloon extends BloonType {
+  static type = "purple";
+  static difficulty = 5;
   constructor(world, map, trackIndex) {
     super(
       world,
@@ -1179,11 +1190,12 @@ class PurpleBloon extends BloonType {
       PinkBloon,
       2
     );
-    this.type = "purple";
   }
 }
 
 class ZebraBloon extends BloonType {
+  static type = "zebra";
+  static difficulty = 6;
   constructor(world, map, trackIndex) {
     super(
       world,
@@ -1196,11 +1208,12 @@ class ZebraBloon extends BloonType {
       WhiteBloon,
       2
     );
-    this.type = "zebra";
   }
 }
 
 class LeadBloon extends BloonType {
+  static type = "zebra";
+  static difficulty = 6;
   constructor(world, map, trackIndex) {
     super(
       world,
@@ -1213,11 +1226,12 @@ class LeadBloon extends BloonType {
       BlackBloon,
       2
     );
-    this.type = "lead";
   }
 }
 
 class RainbowBloon extends BloonType {
+  static type = "rainbow";
+  static difficulty = 7;
   constructor(world, map, trackIndex) {
     super(
       world,
@@ -1230,11 +1244,12 @@ class RainbowBloon extends BloonType {
       ZebraBloon,
       2
     );
-    this.type = "rainbow";
   }
 }
 
 class CeramicBloon extends BloonType {
+  static type = "ceramic";
+  static difficulty = 8;
   constructor(world, map, trackIndex) {
     super(
       world,
@@ -1247,7 +1262,6 @@ class CeramicBloon extends BloonType {
       RainbowBloon,
       2
     );
-    this.type = "ceramic";
   }
 }
 
@@ -1255,6 +1269,7 @@ class Tower extends Entity {
   static targetingPriorities = ["first", "last", "close", "far", "strong"];
   _targetPriority = "first"; //first, last, close, far, strong
   _reloadLeft = 0;
+  _target = null
   constructor(world, x, y, drawer, bullet, reload, range, size) {
     super(world, x, y, 1000, 0, drawer, size);
     this.bullet = bullet;
@@ -1266,12 +1281,12 @@ class Tower extends Entity {
     this.pops = 0;
   }
   tickExt() {
-    let target = this.findTarget();
+    this.findTarget();
     if (this._reloadLeft > 0) {
       this._reloadLeft--;
       return;
     } else {
-      if (target) {
+      if (this._target) {
         this.fire();
       }
     }
@@ -1327,15 +1342,45 @@ class Tower extends Entity {
           }
         }
       }
+    } else if (this._targetPriority === "strong") {
+      let maxDifficulty = -Infinity;
+      for (let e of this.world.bloons) {
+        let dist = this.getPos().distanceTo(e.getPos());
+        if (dist <= this.range + e.size) {
+          if (e.constructor.difficulty > maxDifficulty) {
+            maxDifficulty = e.constructor.difficulty;
+            finalDist = dist;
+            target = e;
+          }
+        }
+      }
     }
 
     //Actually point at target
+    this._target = target
     if (target) {
-      this.rotation = this.getPos().angleTo(
-        target.getAdjustedPredictionDistSpd(
-          finalDist - target.size,
-          this.bullet.speed ?? 10,
-          2
+      let aimAt = target.getAdjustedPredictionDistSpd(
+        finalDist - target.size,
+        this.bullet.speed ?? 10,
+        2
+      );
+      this.rotation = this.getPos().angleTo(aimAt);
+      this.world.particles.push(
+        new ShapeParticle(
+          aimAt.x,
+          aimAt.y,
+          0,
+          1,
+          0,
+          0,
+          "circle",
+          [255, 0, 0],
+          [255, 0, 0],
+          10,
+          10,
+          10,
+          10,
+          0
         )
       );
       return target;
@@ -1348,6 +1393,7 @@ class Tower extends Entity {
     bulletToFire.x = this.x;
     bulletToFire.y = this.y;
     bulletToFire.direction = this.rotation;
+    bulletToFire.directedAt = this._target;
     this.world.bullets.push(bulletToFire);
     this._reloadLeft = this.reload;
   }
@@ -1421,8 +1467,8 @@ const towers = {
         damage: 7,
         size: 10,
         drawer: new DrawShape("rect", [255, 0, 0], [255, 0, 0], 0, 4, 6),
-        speed: 30,
-        lifetime: 7,
+        speed: 60,
+        lifetime: 30,
         trailColour: [255, 0, 0],
         trailSize: 2,
       };
