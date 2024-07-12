@@ -34,3 +34,4 @@ dwsync.xml
 #releases
 out/
 node_modules/
+forge.config.js

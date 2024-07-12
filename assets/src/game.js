@@ -702,7 +702,7 @@ function drawInGameUI() {
     textAlign(CENTER, CENTER);
     RADImage(images.ui.xp_bg, 40, 40, 90, 90, frameCount / 60);
     RADImage(images.ui.xp_bg, 40, 40, 90, 90, 0);
-    text(game.level, 40, 40 + textSize() * 0.15);
+    text(game.level, 40, 40);
     pop();
   }
 

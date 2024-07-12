@@ -5,10 +5,17 @@ const path = require('node:path')
 function createWindow () {
   // Create the browser window.
   const mainWindow = new BrowserWindow({
-    width: 850,
-    height: 870,
+    width: 800,
+    height: 800,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js')
+    },
+    resizable: false,
+    titleBarStyle: 'hidden',
+    titleBarOverlay: {
+      color: '#ff7F00',
+      symbolColor: '#000000',
+      height: 20
     }
   })
 

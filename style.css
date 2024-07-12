@@ -3,6 +3,7 @@ html, body{
   padding: 0px;
   text-align: center;
   background-color: black;
+  overflow: hidden;
 }
 .version-number{
   visibility: hidden;
