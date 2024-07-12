@@ -1,0 +1,32 @@
+{
+  "name": "bloons-monkey-doom",
+  "version": "1.0.0",
+  "description": "Fan-made Bloons game where you play as the Bloons, against the monkeys",
+  "main": "main.js",
+  "directories": {
+    "lib": "lib"
+  },
+  "scripts": {
+    "start": "electron .",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/LightningLaser8/Bloons-Monkey-Doom.git"
+  },
+  "keywords": [
+    "Bloons"
+  ],
+  "author": "LightningLaser8",
+  "license": "GPL-3.0",
+  "bugs": {
+    "url": "https://github.com/LightningLaser8/Bloons-Monkey-Doom/issues"
+  },
+  "homepage": "https://github.com/LightningLaser8/Bloons-Monkey-Doom#readme",
+  "devDependencies": {
+    "electron": "^31.2.0"
+  },
+  "dependencies": {
+    "@electron/build-tools": "^1.2.0"
+  }
+}
