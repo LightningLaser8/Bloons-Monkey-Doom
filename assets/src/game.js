@@ -98,7 +98,8 @@ function setup() {
   rectMode(CENTER);
   imageMode(CENTER);
   textAlign(CENTER, CENTER);
-  textFont("Luckiest Guy");
+  let luckiestGuyStatic = loadFont("assets/font/LuckiestGuy-Regular.ttf")
+  textFont(luckiestGuyStatic);
   //testRed.addStatus({effect: "fire", time: 240})
 
   setupAnimations();
@@ -407,7 +408,7 @@ function selectMenu() {
     noStroke();
     fill(...colours.ui.buttons.contrast);
     textSize(50);
-    text(names.difficulties[difficulty] + " Maps", 400, 40);
+    text(names.difficulties[difficulty] + " Maps", 400, 30);
     let len = Math.min(6, sortedMaps[difficulty].length);
     for (let mapIndex = 0; mapIndex < len; mapIndex++) {
       let map = sortedMaps[difficulty][mapIndex + 6 * (ui.mapMenuPage - 1)];
@@ -467,10 +468,10 @@ function showTitleAt(x, y) {
   fill(colours.title.bloons.main);
   stroke(colours.title.bloons.outline);
   strokeWeight(10);
-  text("Bloons", x, y + 44);
-  text("Bloons", x, y + 40);
-  text("Bloons", x, y + 36);
-  text("Bloons", x, y + 32);
+  text("Bloons", x, y + 34);
+  text("Bloons", x, y + 30);
+  text("Bloons", x, y + 26);
+  text("Bloons", x, y + 22);
 }
 
 /**
@@ -522,7 +523,7 @@ function button(
     fill(...colours.ui.buttons.contrast);
     noStroke();
     textAlign(CENTER, CENTER);
-    text(shownText, x, y + textSize() * 0.12 /*, width, height*/);
+    text(shownText, x, y /*+ textSize() * 0.12 , width, height*/);
   }
   pop();
   return false;
@@ -595,7 +596,7 @@ function captionedImageButton(
   fill(...colours.ui.buttons.contrast);
   noStroke();
   textAlign(CENTER, CENTER);
-  text(shownText, x, y + textSize() * 1.12 + height / 2 /*, width, height*/);
+  text(shownText, x, y + textSize() * 1 + height / 2 /*, width, height*/);
   pop();
 }
 
