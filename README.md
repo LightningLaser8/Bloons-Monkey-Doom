@@ -1,6 +1,5 @@
 [![Uses p5.js](https://img.shields.io/badge/uses-p5.js-f1678e "Uses p5.js")](https://p5js.org/)
 ![GitHub commits since latest release](https://img.shields.io/github/commits-since/LightingLaser8/Bloons-Monkey-Doom/latest "GitHub commits since latest release")
-![GitHub commit activity](https://img.shields.io/github/commit-activity/w/LightningLaser8/Bloons-Monkey-Doom "GitHub commit activity")
 ![GitHub last commit](https://img.shields.io/github/last-commit/LightningLaser8/Bloons-Monkey-Doom)
 ![GitHub Downloads (all assets, all releases)](https://img.shields.io/github/downloads/LightningLaser8/Bloons-Monkey-Doom/total "GitHub Downloads (all assets, all releases)")
 ![GitHub Release](https://img.shields.io/github/v/release/LightningLaser8/Bloons-Monkey-Doom "GitHub Release")
