@@ -1,12 +1,12 @@
 // Modules to control application life and create native browser window
-const { app, BrowserWindow } = require('electron')
+const { app, BrowserWindow, nativeImage} = require('electron')
 const path = require('node:path')
 
 function createWindow () {
   // Create the browser window.
   const mainWindow = new BrowserWindow({
     width: 800,
-    height: 800,
+    height: 840,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js')
     },
@@ -15,8 +15,9 @@ function createWindow () {
     titleBarOverlay: {
       color: '#ff7F00',
       symbolColor: '#000000',
-      height: 20
-    }
+      height: 40
+    },
+    icon: "./bmd.ico"
   })
 
   // and load the index.html of the app.
