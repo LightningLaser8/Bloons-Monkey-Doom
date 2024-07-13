@@ -77,6 +77,8 @@ let sortedMaps;
 
 game.map = maps.grasslands;
 loadTowersFrom(maps.grasslands)
+setTitleBarExtras(": Grasslands")
+refreshWindowTitle()
 
 let particleLayer, lightingLayer;
 
@@ -612,6 +614,8 @@ function mapButton(x, y, map) {
       game.map = map;
       loadTowersFrom(game.map);
       state = "start-menu";
+      setTitleBarExtras(": "+map.displayName)
+      refreshWindowTitle()
     }
   );
 }
@@ -990,4 +994,12 @@ function loadTowersFrom(map) {
     createdTower.setTargetingPrio(tower.target ?? "first")
     world.towers.push(createdTower);
   }
+}
+
+function setTitleBarExtras(text){
+  document.getElementById("title-extras").innerText = ""+text
+}
+
+function refreshWindowTitle(){
+  document.querySelector("title").innerText = ((game.map?.displayName)?game.map.displayName + " - ":"") + "Bloons Monkey Doom"
 }
