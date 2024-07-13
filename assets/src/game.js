@@ -523,7 +523,7 @@ function button(
     fill(...colours.ui.buttons.contrast);
     noStroke();
     textAlign(CENTER, CENTER);
-    text(shownText, x, y /*+ textSize() * 0.12 , width, height*/);
+    text(shownText, x, y /*, width, height*/);
   }
   pop();
   return false;
@@ -808,7 +808,7 @@ function bloonSendButton(x, y, bloon, bloonClass) {
     ((textSize() * 40) / textWidth("x" + game.inventory.bloons[bloon + "s"])) *
       0.8
   );
-  text("x" + game.inventory.bloons[bloon + "s"], x - 20, y + textSize() * 0.15);
+  text("x" + game.inventory.bloons[bloon + "s"], x - 20, y);
   button(x + 40, y, 40, 30, "-->", () => {
     if (game.inventory.bloons[bloon + "s"] >= 1) {
       game.inventory.bloons[bloon + "s"]--;
@@ -848,11 +848,11 @@ function bloonBuyButton(x, y, bloon, price) {
     ((textSize() * 40) / textWidth("x" + game.inventory.bloons[bloon + "s"])) *
       0.8
   );
-  text("x" + game.inventory.bloons[bloon + "s"], x - 20, y + textSize() * 0.15);
+  text("x" + game.inventory.bloons[bloon + "s"], x - 20, y);
 
   textSize(5); //starting point for checks
   textSize(((textSize() * 40) / textWidth("x" + price)) * 0.8);
-  text("$" + price, x + 73, y + textSize() * 0.15);
+  text("$" + price, x + 73, y);
 
   button(x + 27, y, 30, 30, "+", () => {
     if (game.inventory.cash >= price) {
