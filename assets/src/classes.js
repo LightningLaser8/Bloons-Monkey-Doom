@@ -718,8 +718,8 @@ class Entity {
   }
   addStatus(status) {
     this.statuses.push(status);
-    if (effect_registry[status.effect].onApply) {
-      effect_registry[status.effect].onApply.apply(this);
+    if (statusRegistry.get(status.effect).onApply) {
+      statusRegistry.get(status.effect).onApply.apply(this);
     }
   }
   get actualSpeed() {
@@ -748,7 +748,7 @@ class Entity {
     this.damageMultiplier = 1;
     this.#speedMultiplier = 1;
     for (let s of this.statuses) {
-      let status = effect_registry[s.effect];
+      let status = statusRegistry.get(s.effect);
       if (s.time > 0) {
         if (status.tickChance ? Math.random() < status.tickChance : true) {
           status.tick.apply(this);
@@ -770,8 +770,8 @@ class Entity {
         }
         s.time--;
       } else {
-        if (effect_registry[s.effect].onEnd) {
-          effect_registry[s.effect].onEnd.apply(this, [s]);
+        if (statusRegistry.get(s.effect).onEnd) {
+          statusRegistry.get(s.effect).onEnd.apply(this, [s]);
         }
         this.statuses.splice(this.statuses.indexOf(s), 1);
       }
