@@ -36,8 +36,6 @@ let game = {
     },
     /** Powerups in storage */
     powerups: {},
-    /** Is lighting enabled? */
-    lighting: true,
   },
   /** Experience points */
   xp: 0,
@@ -45,6 +43,8 @@ let game = {
   level: 0,
   /** Map the game is in. Replaces tracks. */
   map: null,
+  /** Is lighting enabled? */
+  lighting: true,
 };
 /**Contains properties relating to the user interface*/
 let ui = {
@@ -80,7 +80,7 @@ loadTowersFrom(game.map)
 setTitleBarExtras(": Grasslands")
 refreshWindowTitle()
 
-let particleLayer, lightingLayer;
+let canvas, particleLayer, lightingLayer, lightingPart;
 
 function preload() {
   //load all second-level images
@@ -94,9 +94,10 @@ function preload() {
 }
 
 function setup() {
-  createCanvas(800, 800);
+  canvas = createCanvas(800, 800);
   particleLayer = createGraphics(800, 800);
   lightingLayer = createGraphics(800, 800);
+  lightingPart = createGraphics(800, 800);
   rectMode(CENTER);
   imageMode(CENTER);
   textAlign(CENTER, CENTER);
@@ -120,7 +121,26 @@ function makeBloon(type = RedBloon, trackIndex = 0) {
   //blon.addStatus({ effect: "cold", time: 180 });
 }
 
-function mousePressed() {}
+function mousePressed() {
+  let particle = new ShapeParticle(
+    mouseX,
+    mouseY,
+    0,
+    60,
+    4,
+    0.1,
+    "circle",
+    [255, 255, 255],
+    [255, 255, 255],
+    10,
+    0,
+    10,
+    0,
+    0
+  )
+  createLightOn(particle, 50, 0, [255, 0, 0])
+  world.particles.push(particle)
+}
 
 function keyPressed() {}
 
@@ -243,29 +263,37 @@ function drawParticles() {
 function drawLighting() {
   if (game.lighting) {
     let lightableObjects = [...world.particles, ...world.bullets];
-    push();
+
     lightingLayer.clear();
-    lightingLayer.blendMode(ADD);
     lightingLayer.noStroke();
-    for (let l of lightableObjects) {
-      if (l.light) {
-        let light = l.light;
-        lightingLayer.fill(
-          light.colour[0],
-          light.colour[1],
-          light.colour[2],
-          light.luminance / 10
-        );
-        for (let mult = 1; mult > 0.1; mult -= 0.1)
-          lightingLayer.circle(l.x, l.y, light.radius * mult);
-        console.log(
-          "light at " + l.x + ", " + l.y + " with radius " + light.radius
-        );
-      }
-    }
+    lightingLayer.fill(255)
+
+    lightingLayer.image(light(lightableObjects, 1, 100), 0, 0, 800, 800);
+    lightingLayer.image(light(lightableObjects, 0.7, 100), 0, 0, 800, 800);
+
+
     image(lightingLayer, 400, 400, 800, 800);
-    pop();
   }
+}
+
+function light(objects, radiusMult, darkenAlpha = 255){
+  lightingPart.clear();
+  lightingPart.noStroke();
+  lightingPart.fill(255)
+
+  lightingPart.push()
+  for (let l of objects) {
+    if (l.light) {
+      let light = l.light;
+      lightingPart.beginClip({invert: true})
+      lightingPart.circle(l.x, l.y, light.radius*radiusMult)
+      lightingPart.endClip()
+    }
+  }
+  lightingPart.fill(0, darkenAlpha)
+  lightingPart.rect(0, 0, 800, 800)
+  lightingPart.pop();
+  return lightingPart
 }
 
 function createLightOn(object, radius, luminance, colour = [255, 255, 255]) {
