@@ -74,9 +74,9 @@ let { world, player, state } = game;
 let sortedMaps;
 
 game.map = mapRegistry.get("grasslands");
-loadTowersFrom(game.map)
-setTitleBarExtras(": Grasslands")
-refreshWindowTitle()
+loadTowersFrom(game.map);
+setTitleBarExtras(": Grasslands");
+refreshWindowTitle();
 
 let particleLayer, lightingLayer;
 
@@ -98,7 +98,7 @@ function setup() {
   rectMode(CENTER);
   imageMode(CENTER);
   textAlign(CENTER, CENTER);
-  let luckiestGuyStatic = loadFont("assets/font/LuckiestGuy-Regular.ttf")
+  let luckiestGuyStatic = loadFont("assets/font/LuckiestGuy-Regular.ttf");
   textFont(luckiestGuyStatic);
 
   setupAnimations();
@@ -107,7 +107,10 @@ function setup() {
 
   //Sort maps
   sortedMaps = [[], [], [], [], []];
-  mapRegistry.forEach((map) => {console.log(map); sortedMaps[map.difficulty].push(map)})
+  mapRegistry.forEach((map) => {
+    console.log(map);
+    sortedMaps[map.difficulty].push(map);
+  });
   console.log(sortedMaps);
 }
 
@@ -246,7 +249,7 @@ function tickEntities() {
     for (let b of world.bullets) {
       if (b.collidesWith(e)) {
         if (b.pierce <= 0) {
-          b.onHit(e, e.x, e.y);
+          createVisualEffect(b.hitEffect, e.x, e.y);
           if (b.damage > 0) {
             e.damage(b.damage, b.attributableEntity);
           }
@@ -272,6 +275,10 @@ function tickEntities() {
 
 function tickBullets() {
   for (let b of world.bullets) {
+    if (!b.created) {
+      createVisualEffect(b.shootEffect, e.x, e.y);
+      b.created = true;
+    }
     if (b.remove) {
       for (let f = 0; f < b.fragNumber; f++) {
         let newBullet = b.frag();
@@ -291,7 +298,9 @@ function tickBullets() {
           b.splashShake
         );
       }
+      createVisualEffect(b.despawnEffect, e.x, e.y);
       b.onRemove();
+      //createVisualEffect(b.hitEffect, b.x, b.y)
       world.bullets.splice(world.bullets.indexOf(b), 1);
     }
     let newBullets = b.interval();
@@ -571,8 +580,8 @@ function mapButton(x, y, map) {
       game.map = map;
       loadTowersFrom(game.map);
       state = "start-menu";
-      setTitleBarExtras(": "+map.displayName)
-      refreshWindowTitle()
+      setTitleBarExtras(": " + map.displayName);
+      refreshWindowTitle();
     }
   );
 }
@@ -628,17 +637,14 @@ function drawInGameUI() {
     noStroke();
     textSize(20);
     textSize(
-      Math.min(30, (textSize() * 100) / textWidth(game.inventory.cash)) *
-        0.8
+      Math.min(30, (textSize() * 100) / textWidth(game.inventory.cash)) * 0.8
     );
     textAlign(LEFT, CENTER);
     image(images.ui.coin, originX - 120, originY - 1, 40, 40);
     text(game.inventory.cash, originX - 100, originY + 2);
     textSize(
-      Math.min(
-        30,
-        (textSize() * 100) / textWidth(game.inventory.bloon_gold)
-      ) * 0.8
+      Math.min(30, (textSize() * 100) / textWidth(game.inventory.bloon_gold)) *
+        0.8
     );
     textAlign(LEFT, CENTER);
     image(images.ui.bloon_gold, originX + 2, originY - 1, 32, 40);
@@ -648,7 +654,7 @@ function drawInGameUI() {
   }
   //XP and level
   {
-    game.level = game.xp //temporary
+    game.level = game.xp; //temporary
     push();
     noFill();
     stroke(...colours.ui.accent);
@@ -948,15 +954,23 @@ function loadTowersFrom(map) {
   world.towers.splice(0, world.towers.length);
   for (let tower of map.towers) {
     let createdTower = new towers[tower.type](world, tower.x, tower.y);
-    createdTower.setTargetingPrio(tower.target ?? "first")
+    createdTower.setTargetingPrio(tower.target ?? "first");
     world.towers.push(createdTower);
   }
 }
 
-function setTitleBarExtras(text){
-  document.getElementById("title-extras").innerText = ""+text
+function setTitleBarExtras(text) {
+  document.getElementById("title-extras").innerText = "" + text;
 }
 
-function refreshWindowTitle(){
-  document.querySelector("title").innerText = ((game.map?.displayName)?game.map.displayName + " - ":"") + "Bloons Monkey Doom"
+function refreshWindowTitle() {
+  document.querySelector("title").innerText =
+    (game.map?.displayName ? game.map.displayName + " - " : "") +
+    "Bloons Monkey Doom";
+}
+
+function createVisualEffect(effectName, x, y) {
+  if (!effectRegistry.has(effectName)) return;
+  const effect = effectRegistry.get(effectName);
+  effect.create(world, x, y);
 }
