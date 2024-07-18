@@ -75,8 +75,8 @@ let { world, player, state } = game;
 
 let sortedMaps;
 
-game.map = maps.grasslands;
-loadTowersFrom(maps.grasslands)
+game.map = mapRegistry.get("grasslands");
+loadTowersFrom(game.map)
 setTitleBarExtras(": Grasslands")
 refreshWindowTitle()
 
@@ -110,10 +110,11 @@ function setup() {
 
   //Sort maps
   sortedMaps = [[], [], [], [], []];
-  for (let mapName in maps) {
-    let map = maps[mapName];
-    sortedMaps[map.difficulty].push(map);
-  }
+  mapRegistry.forEach((map) => {console.log(map); sortedMaps[map.difficulty].push(map)})
+  // for (let mapName in maps) {
+  //   let map = maps[mapName];
+  //   ;
+  // }
   console.log(sortedMaps);
 }
 
