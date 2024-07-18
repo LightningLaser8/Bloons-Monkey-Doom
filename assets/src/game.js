@@ -102,7 +102,6 @@ function setup() {
   textAlign(CENTER, CENTER);
   let luckiestGuyStatic = loadFont("assets/font/LuckiestGuy-Regular.ttf")
   textFont(luckiestGuyStatic);
-  //testRed.addStatus({effect: "fire", time: 240})
 
   setupAnimations();
 
@@ -111,10 +110,6 @@ function setup() {
   //Sort maps
   sortedMaps = [[], [], [], [], []];
   mapRegistry.forEach((map) => {console.log(map); sortedMaps[map.difficulty].push(map)})
-  // for (let mapName in maps) {
-  //   let map = maps[mapName];
-  //   ;
-  // }
   console.log(sortedMaps);
 }
 
@@ -237,7 +232,6 @@ function drawBullets() {
 function drawParticles() {
   push();
   particleLayer.clear();
-  //particleLayer.background(0)
   particleLayer.blendMode(ADD);
   for (let p of world.particles) {
     p.show(particleLayer);
