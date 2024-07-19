@@ -8,9 +8,30 @@ class VisualEffect {
   }
 }
 class ParticleEffect extends VisualEffect {
+  /**
+   * Visual effect to spawn particles at a location
+   * @param {number} count Number of particles to spawn.
+   * @param {boolean} useParentDirection If true, the `direction` property is an offset rather than an absolute direction.
+   * @param {number} direction Direction (or offset) to spawn particles at.
+   * @param {number} offset Offset in the direction of the particles (in degrees), before spread.
+   * @param {number} spread Random amount (in degrees) to add to the direction. 90 means a 90 degree cone, or plus-or-minus 45 degrees.
+   * @param {number} lifetime Number of frames until each particle despawns.
+   * @param {number} speed Speed of each particle.
+   * @param {number} decel Speed reduction per frame.
+   * @param {string} shape Shape of the particle.
+   * @param {Array<number>} colourFrom Colour the particle starts at.
+   * @param {Array<number>} colourTo Colour the particle changes to.
+   * @param {number} sizeXFrom Size in the X-direction the particle starts at.
+   * @param {number} sizeXTo Size in the X-direction the particle changes to.
+   * @param {number} sizeYFrom Size in the Y-direction the particle starts at.
+   * @param {number} sizeYTo Size in the Y-direction the particle changes to.
+   * @param {number} rotateSpeed Rotation in degrees per frame.
+   */
   constructor(
     count,
+    useParentDirection,
     direction,
+    offset,
     spread,
     lifetime,
     speed,
@@ -24,13 +45,15 @@ class ParticleEffect extends VisualEffect {
     sizeYTo,
     rotateSpeed
   ) {
-    super(function (world, x, y) {
+    super(function (world, x, y, inDirection) {
+      let dir = useParentDirection ? inDirection + radians(direction) : direction;
+      let offVct = angleToVector(dir).getScaledVector(offset);
       for (let i = 0; i < count; i++) {
         world.particles.push(
           new ShapeParticle(
-            x,
-            y,
-            direction + rnd(spread, -spread),
+            x + offVct.x,
+            y + offVct.y,
+            dir + radians(rnd(spread / 2, -spread / 2)),
             lifetime,
             speed,
             decel,
@@ -58,7 +81,7 @@ class WaveParticleEffect extends VisualEffect {
     strokeFrom,
     strokeTo
   ) {
-    super(function (world, x, y) {
+    super(function (world, x, y, direction) {
       world.particles.push(
         new WaveParticle(
           x,
@@ -87,13 +110,13 @@ class MultiEffect extends VisualEffect {
     this.#effects = effects;
     this.#byRef = byRef;
   }
-  create(world, x, y) {
+  create(world, x, y, direction) {
     for (let e of this.#effects) {
       let effect = e;
       if (this.#byRef) {
         effect = effectRegistry.get(e);
       }
-      e.create(world, x, y);
+      e.create(world, x, y, direction);
     }
   }
 }
@@ -102,11 +125,34 @@ effectRegistry.add(
   "sniper_hit",
   new ParticleEffect(
     5,
+    false,
     0,
-    180,
+    0,
+    360,
     30,
     2,
     0.1,
+    "rhombus",
+    [255, 255, 0],
+    [255, 255, 0, 0],
+    30,
+    30,
+    10,
+    0
+  )
+);
+
+effectRegistry.add(
+  "sniper_fire",
+  new ParticleEffect(
+    1,
+    true,
+    0,
+    20,
+    0,
+    10,
+    0,
+    0,
     "rhombus",
     [255, 255, 0],
     [255, 255, 0, 0],

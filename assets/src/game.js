@@ -108,10 +108,8 @@ function setup() {
   //Sort maps
   sortedMaps = [[], [], [], [], []];
   mapRegistry.forEach((map) => {
-    console.log(map);
     sortedMaps[map.difficulty].push(map);
   });
-  console.log(sortedMaps);
 }
 
 /** Makes a bloon on the current map. Optionally takes a parameter for the track index to place the bloon on. */
@@ -249,7 +247,7 @@ function tickEntities() {
     for (let b of world.bullets) {
       if (b.collidesWith(e)) {
         if (b.pierce <= 0) {
-          createVisualEffect(b.hitEffect, e.x, e.y);
+          createVisualEffect(b.hitEffect, e.x, e.y, b.direction);
           if (b.damage > 0) {
             e.damage(b.damage, b.attributableEntity);
           }
@@ -276,7 +274,7 @@ function tickEntities() {
 function tickBullets() {
   for (let b of world.bullets) {
     if (!b.created) {
-      createVisualEffect(b.shootEffect, e.x, e.y);
+      createVisualEffect(b.shootEffect, b.x, b.y, b.direction);
       b.created = true;
     }
     if (b.remove) {
@@ -298,7 +296,7 @@ function tickBullets() {
           b.splashShake
         );
       }
-      createVisualEffect(b.despawnEffect, e.x, e.y);
+      createVisualEffect(b.despawnEffect, b.x, b.y, b.direction);
       b.onRemove();
       //createVisualEffect(b.hitEffect, b.x, b.y)
       world.bullets.splice(world.bullets.indexOf(b), 1);
@@ -937,7 +935,6 @@ function splashDamageInstance(
               e.getSize()))) /
         damageRadius
       : amount;
-    console.log(decay, damageToTake);
     for (let i = 0; i < statusStacks; i++) {
       if (status != "null" && statusDuration) {
         e.addStatus({
@@ -969,8 +966,9 @@ function refreshWindowTitle() {
     "Bloons Monkey Doom";
 }
 
-function createVisualEffect(effectName, x, y) {
-  if (!effectRegistry.has(effectName)) return;
+function createVisualEffect(effectName, x, y, direction) {
+  if(!effectName) return;
   const effect = effectRegistry.get(effectName);
-  effect.create(world, x, y);
+  if (!effect) return;
+  effect.create(world, x, y, direction);
 }

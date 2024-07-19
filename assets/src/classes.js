@@ -1418,7 +1418,6 @@ class Tower extends Entity {
     return null;
   }
   fire() {
-    console.log(this.bullet);
     let bulletToFire = bullet(this.bullet, this);
     bulletToFire.x = this.x;
     bulletToFire.y = this.y;
@@ -1499,7 +1498,8 @@ const towers = {
         drawer: new DrawShape("rect", [255, 0, 0], [255, 0, 0], 0, 4, 6),
         trailColour: [255, 0, 0],
         trailSize: 2,
-        hitEffect: "sniper_hit"
+        hitEffect: "sniper_hit",
+        shootEffect: "sniper_fire"
       };
       super(
         world,
