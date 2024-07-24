@@ -723,18 +723,30 @@ function drawSidebar() {
     textSize(30);
     text("Bloons", 725, 36);
 
-    bloonSendButton(700, 100, "red");
-    bloonSendButton(700, 150, "blue");
-    bloonSendButton(700, 200, "green");
-    bloonSendButton(700, 250, "yellow");
-    bloonSendButton(700, 300, "pink");
-    bloonSendButton(700, 350, "black");
-    bloonSendButton(700, 400, "purple");
-    bloonSendButton(700, 450, "white");
-    bloonSendButton(700, 500, "zebra");
-    bloonSendButton(700, 550, "lead");
-    bloonSendButton(700, 600, "rainbow");
-    bloonSendButton(700, 650, "ceramic");
+    bloonSendButton(
+      700,
+      100,
+      ui.orderedBloonTypes[ui.selectedBloonType],
+      prices.cash.bloons[ui.orderedBloonTypes[ui.selectedBloonType]]
+    );
+    button(630, 140, 30, 30, "<", () => {
+      if (ui.selectedBloonType > 0) ui.selectedBloonType--;
+    });
+    button(770, 140, 30, 30, ">", () => {
+      if (ui.selectedBloonType < ui.orderedBloonTypes.length - 1)
+        ui.selectedBloonType++;
+    });
+    textSize(5); //starting point for checks
+    textSize(
+      Math.min(
+        30,
+        ((textSize() * 100) /
+          textWidth(ui.orderedBloonTypes[ui.selectedBloonType])) *
+          0.8
+      )
+    );
+    text(ui.orderedBloonTypes[ui.selectedBloonType], 700, 140, 100);
+
   }
   if (ui.sidebar === "bloons-shop") {
     stroke(255);
