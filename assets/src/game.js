@@ -55,6 +55,10 @@ let ui = {
   font: null,
   mapPageDifficulty: 0,
   mapMenuPage: 1,
+  selectedBloonType: 0,
+  get orderedBloonTypes() {
+    return bloonRegistry.getKeys();
+  },
 };
 
 /**Represents the current in-world mouse.*/
@@ -79,8 +83,12 @@ setTitleBarExtras(": Grasslands");
 refreshWindowTitle();
 
 let particleLayer, lightingLayer;
+let luckiestGuyStatic;
 
 function preload() {
+  noTextureError = loadImage("assets/textures/error.png");
+  error = noTextureError;
+  luckiestGuyStatic = loadFont("assets/font/LuckiestGuy-Regular.ttf");
   //load all second-level images
   for (let type in images) {
     for (let instance in images[type]) {
@@ -98,9 +106,8 @@ function setup() {
   rectMode(CENTER);
   imageMode(CENTER);
   textAlign(CENTER, CENTER);
-  let luckiestGuyStatic = loadFont("assets/font/LuckiestGuy-Regular.ttf");
   textFont(luckiestGuyStatic);
-
+  bloonRegistry.forEach((x) => x.update());
   setupAnimations();
 
   game.inventory.cash += 100;
@@ -113,8 +120,19 @@ function setup() {
 }
 
 /** Makes a bloon on the current map. Optionally takes a parameter for the track index to place the bloon on. */
-function makeBloon(type = RedBloon, trackIndex = 0) {
-  let blon = new type(world, game.map, trackIndex);
+function makeBloon(type = "red", trackIndex = 0) {
+  if (!bloonRegistry.get(type)) {
+    console.error("Invalid bloon type: '" + type + "'\n > Does not exist");
+    return;
+  }
+  if (!bloonRegistry.get(type).create) {
+    console.error(
+      "Invalid bloon type: '" + type + "'\n > No 'create()' function"
+    );
+    console.log(bloonRegistry.get(type));
+    return;
+  }
+  let blon = bloonRegistry.get(type).create(world, game.map, trackIndex);
   world.bloons.push(blon);
   //blon.addStatus({ effect: "cold", time: 180 });
 }
@@ -705,18 +723,18 @@ function drawSidebar() {
     textSize(30);
     text("Bloons", 725, 36);
 
-    bloonSendButton(700, 100, "red", RedBloon);
-    bloonSendButton(700, 150, "blue", BlueBloon);
-    bloonSendButton(700, 200, "green", GreenBloon);
-    bloonSendButton(700, 250, "yellow", YellowBloon);
-    bloonSendButton(700, 300, "pink", PinkBloon);
-    bloonSendButton(700, 350, "black", BlackBloon);
-    bloonSendButton(700, 400, "purple", PurpleBloon);
-    bloonSendButton(700, 450, "white", WhiteBloon);
-    bloonSendButton(700, 500, "zebra", ZebraBloon);
-    bloonSendButton(700, 550, "lead", LeadBloon);
-    bloonSendButton(700, 600, "rainbow", RainbowBloon);
-    bloonSendButton(700, 650, "ceramic", CeramicBloon);
+    bloonSendButton(700, 100, "red");
+    bloonSendButton(700, 150, "blue");
+    bloonSendButton(700, 200, "green");
+    bloonSendButton(700, 250, "yellow");
+    bloonSendButton(700, 300, "pink");
+    bloonSendButton(700, 350, "black");
+    bloonSendButton(700, 400, "purple");
+    bloonSendButton(700, 450, "white");
+    bloonSendButton(700, 500, "zebra");
+    bloonSendButton(700, 550, "lead");
+    bloonSendButton(700, 600, "rainbow");
+    bloonSendButton(700, 650, "ceramic");
   }
   if (ui.sidebar === "bloons-shop") {
     stroke(255);
@@ -725,43 +743,46 @@ function drawSidebar() {
     textSize(30);
     text("Shop", 725, 36);
 
-    //Buy buttons
-    bloonBuyButton(700, 100, "red", prices.cash.bloons.red);
-    bloonBuyButton(700, 150, "blue", prices.cash.bloons.blue);
-    bloonBuyButton(700, 200, "green", prices.cash.bloons.green);
-    bloonBuyButton(700, 250, "yellow", prices.cash.bloons.yellow);
-    bloonBuyButton(700, 300, "pink", prices.cash.bloons.pink);
-    bloonBuyButton(700, 350, "black", prices.cash.bloons.black);
-    bloonBuyButton(700, 400, "purple", prices.cash.bloons.purple);
-    bloonBuyButton(700, 450, "white", prices.cash.bloons.white);
-    bloonBuyButton(700, 500, "zebra", prices.cash.bloons.zebra);
-    bloonBuyButton(700, 550, "lead", prices.cash.bloons.lead);
-    bloonBuyButton(700, 600, "rainbow", prices.cash.bloons.rainbow);
-    bloonBuyButton(700, 650, "ceramic", prices.cash.bloons.ceramic);
+    //Buy button
+    bloonBuyButton(
+      700,
+      100,
+      ui.orderedBloonTypes[ui.selectedBloonType],
+      prices.cash.bloons[ui.orderedBloonTypes[ui.selectedBloonType]]
+    );
+    button(630, 140, 30, 30, "<", () => {
+      if (ui.selectedBloonType > 0) ui.selectedBloonType--;
+    });
+    button(770, 140, 30, 30, ">", () => {
+      if (ui.selectedBloonType < ui.orderedBloonTypes.length - 1)
+        ui.selectedBloonType++;
+    });
+    textSize(5); //starting point for checks
+    textSize(
+      Math.min(
+        30,
+        ((textSize() * 100) /
+          textWidth(ui.orderedBloonTypes[ui.selectedBloonType])) *
+          0.8
+      )
+    );
+    text(ui.orderedBloonTypes[ui.selectedBloonType], 700, 140, 100);
   }
   pop();
 }
 
-function bloonSendButton(x, y, bloon, bloonClass) {
-  if (!images.bloons[bloon]) {
+function bloonSendButton(x, y, bloon) {
+  let img = images.art[bloon] ?? images.bloons[bloon];
+  if (!img) {
     console.error("Image not found for bloon " + bloon);
-    return;
+    img = noTextureError;
   }
+  image(img, x - 70, y, img.width / 2, img.height / 2);
   if (game.inventory.bloons[bloon + "s"] == null) {
     console.error("There is no slot in your inventory for " + bloon + "s");
     return;
   }
-  if (!bloonClass) {
-    console.error(bloonClass + " is not a class!");
-    return;
-  }
-  image(
-    images.bloons[bloon],
-    x - 70,
-    y,
-    images.bloons[bloon].width / 2,
-    images.bloons[bloon].height / 2
-  );
+
   strokeWeight(5);
   stroke(colours.ui.buttons.contrast);
   fill(colours.ui.buttons.main);
@@ -777,27 +798,22 @@ function bloonSendButton(x, y, bloon, bloonClass) {
   button(x + 40, y, 40, 30, "-->", () => {
     if (game.inventory.bloons[bloon + "s"] >= 1) {
       game.inventory.bloons[bloon + "s"]--;
-      makeBloon(bloonClass);
+      makeBloon(bloon);
     }
   });
 }
 
 function bloonBuyButton(x, y, bloon, price) {
-  if (!images.bloons[bloon]) {
-    console.error("Image not found for bloon " + bloon);
-    return;
+  let img = images.art[bloon] ?? images.bloons[bloon];
+  if (!img) {
+    console.error("Image not found for bloon '" + bloon + "'");
+    img = noTextureError;
   }
+  image(img, x - 70, y, img.width / 2, img.height / 2);
   if (game.inventory.bloons[bloon + "s"] == null) {
-    console.error("There is no slot in your inventory for " + bloon + "s");
+    console.error("There is no slot in your inventory for '" + bloon + "'s");
     return;
   }
-  image(
-    images.bloons[bloon],
-    x - 70,
-    y,
-    images.bloons[bloon].width / 2,
-    images.bloons[bloon].height / 2
-  );
 
   strokeWeight(5);
   stroke(colours.ui.buttons.contrast);
@@ -967,7 +983,7 @@ function refreshWindowTitle() {
 }
 
 function createVisualEffect(effectName, x, y, direction) {
-  if(!effectName) return;
+  if (!effectName) return;
   const effect = effectRegistry.get(effectName);
   if (!effect) return;
   effect.create(world, x, y, direction);
