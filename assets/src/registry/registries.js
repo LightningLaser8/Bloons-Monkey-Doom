@@ -59,4 +59,4 @@ const statusRegistry = new Registry("Status Effects");
 const mapRegistry = new Registry("Maps");
 const bloonRegistry = new Registry("Bloons");
 const effectRegistry = new Registry("Visual Effects");
-//const towerRegistry = new Registry("Towers");
+const towerRegistry = new Registry("Towers");
