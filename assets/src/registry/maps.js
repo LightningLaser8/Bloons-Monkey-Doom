@@ -17,16 +17,18 @@ mapRegistry.add("grasslands", {
     },
   ],
   towers: [
-    {
-      type: "TestTower",
-      x: 122,
-      y: 238,
-    },
-    {
-      type: "TestSniper",
-      x: 563,
-      y: 105,
-      target: "strong"
-    },
+    [
+      {
+        type: "test_tower",
+        x: 122,
+        y: 238,
+      },
+      {
+        type: "test_sniper:2",
+        x: 563,
+        y: 105,
+        target: "strong"
+      },
+    ],
   ],
 })

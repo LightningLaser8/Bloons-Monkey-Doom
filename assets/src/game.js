@@ -41,10 +41,12 @@ let game = {
   xp: 0,
   /** XP level */
   level: 0,
-  /** Map the game is in. Replaces tracks. */
+  /** Map the game is in. */
   map: null,
+  /** Difficulty of the current game, not map. Affects tower spawning. */
+  difficulty: 0
 };
-/**Contains properties relating to the user interface*/
+/** Contains properties relating to the user interface */
 let ui = {
   setUp: false,
   sidebar: "hidden",
@@ -977,8 +979,15 @@ function splashDamageInstance(
 
 function loadTowersFrom(map) {
   world.towers.splice(0, world.towers.length);
-  for (let tower of map.towers) {
-    let createdTower = new towerRegistry.get(tower.type)(world, tower.x, tower.y);
+  if(!map) return;
+  if(!map.towers) return;
+  for (let tower of map.towers[game.difficulty]) {
+    let towerType = tower.type
+    if(towerType.split(":").length === 1){
+      towerType = towerType + ":0"
+    }
+    let towerClass = towerRegistry.get(towerType)
+    let createdTower = new towerClass(world, tower.x, tower.y);
     createdTower.setTargetingPrio(tower.target ?? "first");
     world.towers.push(createdTower);
   }
