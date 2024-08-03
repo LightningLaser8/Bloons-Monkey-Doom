@@ -1,3 +1,4 @@
+let noTextureError
 //So I don't have to write this crap out 324 times
 function modImage(img, img_x, img_y, img_width, img_height){
   image(img, img_x, img_y, img_width, img_height)

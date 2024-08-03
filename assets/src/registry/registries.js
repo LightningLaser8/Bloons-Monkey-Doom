@@ -9,6 +9,7 @@ class Registry {
    * @param {*} item Item to add.
    */
   add(name, item) {
+    console.log("Added item '"+name+"' to registry for "+this.name)
     Object.defineProperty(this.#registry, name, {
       value: item,
       writable: false,
@@ -28,7 +29,7 @@ class Registry {
           this.name
       );
     }
-    return this.#registry[name] ?? null;
+    return this.#registry[name];
   }
   /**
    * Checks if an item exists in registry.
@@ -46,10 +47,16 @@ class Registry {
       callback(item)
     }
   }
+  getValues(){
+    return Object.values(this.#registry)
+  }
+  getKeys(){
+    return Object.keys(this.#registry)
+  }
 }
 
 const statusRegistry = new Registry("Status Effects");
 const mapRegistry = new Registry("Maps");
-//const bloonRegistry = new Registry("Bloons");
-//const effectRegistry = new Registry("Visual Effects");
-//const towerRegistry = new Registry("Towers");
+const bloonRegistry = new Registry("Bloons");
+const effectRegistry = new Registry("Visual Effects");
+const towerRegistry = new Registry("Towers");

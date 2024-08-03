@@ -1,3 +1,5 @@
+const errorDrawer = new DrawImage(noTextureError, 20, 20);
+
 class ScreenShakeInstance {
   constructor(x, y, intensity, duration) {
     this.x = x;
@@ -912,24 +914,53 @@ class Entity {
   }
 }
 
-class BloonType extends Entity {
-  trackPoint = 0;
-  progress = 0;
-  leaked = false;
-  damageSource = null;
-  static type = "red";
-  static difficulty = -1;
+class BloonType {
+  difficulty = -1;
+  name = "red";
+  health = 1;
+  speed = baseSpeed;
+  drawer = errorDrawer; //25 x 32
+  size = 10;
+  child = null;
+  numChildren = 0;
   constructor(
-    world,
-    map,
-    trackIndex,
+    name,
+    difficulty,
     health,
     speed,
     drawer,
     size,
     child,
-    numChildren = 1
+    numChildren
   ) {
+    this.colour = name;
+    this.difficulty = difficulty;
+    this.health = health;
+    this.speed = speed;
+    this.drawer = drawer;
+    this.size = size;
+    this.child = child;
+    this.numChildren = numChildren;
+  }
+  create(world, map, trackIndex) {
+    return new Bloon(world, map, trackIndex, this, this.name);
+  }
+  update() {
+    if (this.drawer.update) {
+      this.drawer.update();
+    }
+  }
+}
+
+class Bloon extends Entity {
+  trackPoint = 0;
+  progress = 0;
+  leaked = false;
+  damageSource = null;
+  get difficulty() {
+    return this.type.difficulty;
+  }
+  constructor(world, map, trackIndex, type, typeName) {
     let track = map.tracks[trackIndex];
     if (!track) {
       console.warn(
@@ -941,17 +972,19 @@ class BloonType extends Entity {
       world,
       track.points[0].x,
       track.points[0].y,
-      health,
-      speed,
-      drawer,
-      size
+      type.health,
+      type.speed,
+      type.drawer,
+      type.size
     );
     this.showHealthbar = false;
     this.track = map.tracks[trackIndex];
     this.map = map;
     this.trackIndex = trackIndex;
-    this.child = child;
-    this.numChildren = numChildren;
+    this.child = type.child;
+    this.numChildren = type.numChildren;
+    this.type = type;
+    this.typeName = typeName;
   }
   damage(amount, damageSource, hideParticles = true) {
     this.damageSource = damageSource;
@@ -997,7 +1030,7 @@ class BloonType extends Entity {
           )
         );
       }
-      game.xp += rewards.xp.bloons[this.constructor.type];
+      game.xp += rewards.xp.bloons[this.typeName];
       game.inventory.cash += 4; //not too sure about this
     } else {
       this.world.particles.push(
@@ -1023,8 +1056,8 @@ class BloonType extends Entity {
             rndScl(3, 5, 10),
             0.25,
             "square",
-            colours.bloons[this.constructor.type],
-            colours.bloons[this.constructor.type],
+            colours.bloons[this.type.colour],
+            colours.bloons[this.type.colour],
             5,
             0,
             5,
@@ -1040,12 +1073,14 @@ class BloonType extends Entity {
   split(damageToDeal = 0) {
     if (this.child) {
       for (let i = 0; i < this.numChildren; i++) {
-        let child = new this.child(this.world, this.map, this.trackIndex);
+        let child = bloonRegistry
+          .get(this.child)
+          .create(this.world, this.map, this.trackIndex);
         child.x = this.x;
         child.y = this.y;
         child.progress = this.progress;
         child.trackPoint = this.trackPoint;
-        child.statuses = JSON.parse(JSON.stringify(this.statuses));
+        child.statuses = this.statuses.slice();
         this.world.bloons.push(child);
         child.damage(damageToDeal, this.damageSource);
       }
@@ -1079,224 +1114,12 @@ class BloonType extends Entity {
   }
 }
 
-const baseSpeed = 1.2;
-
-class RedBloon extends BloonType {
-  static type = "red";
-  static difficulty = 0;
-  constructor(world, map, trackIndex) {
-    super(
-      world,
-      map,
-      trackIndex,
-      1,
-      baseSpeed,
-      new DrawImage(images.bloons.red, 25, 32),
-      10,
-      null
-    );
-  }
-}
-
-class BlueBloon extends BloonType {
-  static type = "blue";
-  static difficulty = 1;
-  constructor(world, map, trackIndex) {
-    super(
-      world,
-      map,
-      trackIndex,
-      1,
-      baseSpeed * 1.4,
-      new DrawImage(images.bloons.blue, 25, 32),
-      10,
-      RedBloon
-    );
-  }
-}
-
-class GreenBloon extends BloonType {
-  static type = "green";
-  static difficulty = 2;
-  constructor(world, map, trackIndex) {
-    super(
-      world,
-      map,
-      trackIndex,
-      1,
-      baseSpeed * 1.8,
-      new DrawImage(images.bloons.green, 25, 32),
-      10,
-      BlueBloon
-    );
-  }
-}
-
-class YellowBloon extends BloonType {
-  static type = "yellow";
-  static difficulty = 3;
-  constructor(world, map, trackIndex) {
-    super(
-      world,
-      map,
-      trackIndex,
-      1,
-      baseSpeed * 3.2,
-      new DrawImage(images.bloons.yellow, 25, 32),
-      10,
-      GreenBloon
-    );
-  }
-}
-
-class PinkBloon extends BloonType {
-  static type = "pink";
-  static difficulty = 4;
-  constructor(world, map, trackIndex) {
-    super(
-      world,
-      map,
-      trackIndex,
-      1,
-      baseSpeed * 3.5,
-      new DrawImage(images.bloons.pink, 25, 32),
-      10,
-      YellowBloon
-    );
-  }
-}
-
-class BlackBloon extends BloonType {
-  static type = "black";
-  static difficulty = 5;
-  constructor(world, map, trackIndex) {
-    super(
-      world,
-      map,
-      trackIndex,
-      1,
-      baseSpeed * 1.8,
-      new DrawImage(images.bloons.black, 15, 18),
-      7,
-      PinkBloon,
-      2
-    );
-  }
-}
-
-class WhiteBloon extends BloonType {
-  static type = "white";
-  static difficulty = 5;
-  constructor(world, map, trackIndex) {
-    super(
-      world,
-      map,
-      trackIndex,
-      1,
-      baseSpeed * 2,
-      new DrawImage(images.bloons.white, 15, 18),
-      7,
-      PinkBloon,
-      2
-    );
-  }
-}
-
-class PurpleBloon extends BloonType {
-  static type = "purple";
-  static difficulty = 5;
-  constructor(world, map, trackIndex) {
-    super(
-      world,
-      map,
-      trackIndex,
-      1,
-      baseSpeed * 3,
-      new DrawImage(images.bloons.purple, 25, 32),
-      10,
-      PinkBloon,
-      2
-    );
-  }
-}
-
-class ZebraBloon extends BloonType {
-  static type = "zebra";
-  static difficulty = 6;
-  constructor(world, map, trackIndex) {
-    super(
-      world,
-      map,
-      trackIndex,
-      1,
-      baseSpeed * 1.8,
-      new DrawImage(images.bloons.zebra, 25, 32),
-      10,
-      WhiteBloon,
-      2
-    );
-  }
-}
-
-class LeadBloon extends BloonType {
-  static type = "zebra";
-  static difficulty = 6;
-  constructor(world, map, trackIndex) {
-    super(
-      world,
-      map,
-      trackIndex,
-      1,
-      baseSpeed,
-      new DrawImage(images.bloons.lead, 25, 32),
-      10,
-      BlackBloon,
-      2
-    );
-  }
-}
-
-class RainbowBloon extends BloonType {
-  static type = "rainbow";
-  static difficulty = 7;
-  constructor(world, map, trackIndex) {
-    super(
-      world,
-      map,
-      trackIndex,
-      1,
-      baseSpeed * 2.2,
-      new DrawImage(images.bloons.rainbow, 25, 32),
-      10,
-      ZebraBloon,
-      2
-    );
-  }
-}
-
-class CeramicBloon extends BloonType {
-  static type = "ceramic";
-  static difficulty = 8;
-  constructor(world, map, trackIndex) {
-    super(
-      world,
-      map,
-      trackIndex,
-      10,
-      baseSpeed * 2.5,
-      new DrawImage(images.bloons.ceramic, 25, 32),
-      10,
-      RainbowBloon,
-      2
-    );
-  }
-}
-
 class Tower extends Entity {
   static targetingPriorities = ["first", "last", "close", "far", "strong"];
   _targetPriority = "first"; //first, last, close, far, strong
   _reloadLeft = 0;
   _target = null;
+  global = false;
   constructor(world, x, y, drawer, bullet, reload, range, size) {
     super(world, x, y, 1000, 0, drawer, size);
     this.bullet = bullet;
@@ -1324,8 +1147,7 @@ class Tower extends Entity {
     if (this._targetPriority === "close") {
       let minDist = Infinity;
       for (let e of this.world.bloons) {
-        let dist = this.getPos().distanceTo(e.getPos());
-        if (dist <= this.range + e.size) {
+        if (this.global || this.getPos().distanceTo(e.getPos()) <= this.range + e.size) {
           if (dist < minDist) {
             minDist = dist;
             finalDist = minDist;
@@ -1336,8 +1158,7 @@ class Tower extends Entity {
     } else if (this._targetPriority === "far") {
       let maxDist = 0;
       for (let e of this.world.bloons) {
-        let dist = this.getPos().distanceTo(e.getPos());
-        if (dist <= this.range + e.size) {
+        if (this.global || this.getPos().distanceTo(e.getPos()) <= this.range + e.size) {
           if (dist > maxDist) {
             maxDist = dist;
             finalDist = maxDist;
@@ -1348,8 +1169,7 @@ class Tower extends Entity {
     } else if (this._targetPriority === "last") {
       let minProgress = Infinity;
       for (let e of this.world.bloons) {
-        let dist = this.getPos().distanceTo(e.getPos());
-        if (dist <= this.range + e.size) {
+        if (this.global || this.getPos().distanceTo(e.getPos()) <= this.range + e.size) {
           if (e.progress < minProgress) {
             minProgress = e.progress;
             finalDist = dist;
@@ -1360,8 +1180,7 @@ class Tower extends Entity {
     } else if (this._targetPriority === "first") {
       let maxProgress = 0;
       for (let e of this.world.bloons) {
-        let dist = this.getPos().distanceTo(e.getPos());
-        if (dist <= this.range + e.size) {
+        if (this.global || this.getPos().distanceTo(e.getPos()) <= this.range + e.size) {
           if (e.progress > maxProgress) {
             maxProgress = e.progress;
             finalDist = dist;
@@ -1372,10 +1191,9 @@ class Tower extends Entity {
     } else if (this._targetPriority === "strong") {
       let maxDifficulty = -Infinity;
       for (let e of this.world.bloons) {
-        let dist = this.getPos().distanceTo(e.getPos());
-        if (dist <= this.range + e.size) {
-          if (e.constructor.difficulty > maxDifficulty) {
-            maxDifficulty = e.constructor.difficulty;
+        if (this.global || this.getPos().distanceTo(e.getPos()) <= this.range + e.size) {
+          if (e.type.difficulty > maxDifficulty) {
+            maxDifficulty = e.type.difficulty;
             finalDist = dist;
             target = e;
           }
@@ -1395,30 +1213,11 @@ class Tower extends Entity {
         aimAt = target.getPos();
       }
       this.rotation = this.getPos().angleTo(aimAt);
-      this.world.particles.push(
-        new ShapeParticle(
-          aimAt.x,
-          aimAt.y,
-          0,
-          1,
-          0,
-          0,
-          "circle",
-          [255, 0, 0],
-          [255, 0, 0],
-          10,
-          10,
-          10,
-          10,
-          0
-        )
-      );
       return target;
     }
     return null;
   }
   fire() {
-    console.log(this.bullet);
     let bulletToFire = bullet(this.bullet, this);
     bulletToFire.x = this.x;
     bulletToFire.y = this.y;
@@ -1449,6 +1248,7 @@ class Tower extends Entity {
         this.y - this.size - textSize() * 1.12
       );
       text(this.pops + " pops", this.x, this.y + this.size + textSize() * 1.12);
+      if(this.global) text("Global range!", this.x, this.y + this.size + textSize() * 2.12);
     }
   }
   setTargetingPrio(prio) {
@@ -1464,78 +1264,7 @@ class Tower extends Entity {
   }
 }
 
-const towers = {
-  TestTower: class TestTower extends Tower {
-    constructor(world, x, y) {
-      let bulletToAdd = {
-        type: Bullet,
-        damage: 1,
-        size: 10,
-        drawer: new DrawShape("rect", [255, 0, 0], [255, 0, 0], 0, 4, 6),
-        speed: 15,
-        lifetime: 7,
-        trailColour: [255, 0, 0],
-        trailSize: 2,
-      };
-      super(
-        world,
-        x,
-        y,
-        new DrawShape("rect", [255, 0, 0], [0, 0, 0], 3, 10, 20),
-        bulletToAdd,
-        30,
-        100,
-        10
-      );
-      this.displayName = "Test Tower";
-    }
-  },
-  TestSniper: class TestSniper extends Tower {
-    constructor(world, x, y) {
-      let bulletToAdd = {
-        type: PointBullet,
-        damage: 7,
-        size: 10,
-        drawer: new DrawShape("rect", [255, 0, 0], [255, 0, 0], 0, 4, 6),
-        trailColour: [255, 0, 0],
-        trailSize: 2,
-        onHit: function (entityHit, hitX, hitY) {
-          for (let i = 0; i < 5; i++) {
-            entityHit.world.particles.push(
-              new ShapeParticle(
-                hitX,
-                hitY,
-                radians(rnd(0, 360)),
-                30,
-                2,
-                0.1,
-                "rhombus",
-                [255, 255, 0],
-                [255, 255, 0, 0],
-                50,
-                50,
-                20,
-                0
-              )
-            );
-          }
-        },
-      };
-      super(
-        world,
-        x,
-        y,
-        new DrawShape("rect", [255, 0, 0], [0, 0, 0], 3, 10, 20),
-        bulletToAdd,
-        90,
-        1000,
-        10
-      );
-      this.displayName = "Test Sniper";
-      this.tier = 2;
-    }
-  },
-};
+
 
 function logPoint(point) {
   return "(x: " + point.x + ", y: " + point.y + ")";
