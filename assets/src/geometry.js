@@ -206,17 +206,17 @@ class DrawImage extends Drawer { //Draws an image from a file.
       this.#errored = false;
     }
     catch (error) {
-      console.error(error)
+      BMDConsole.error(error)
       RADImage(noTextureError, x, y, 30, 30, angle);
       try {
         if (!this.#errored) {
-          console.warn("Error drawing texture " + this.image + ". Has this texture been preloaded? If so, check spelling and capitalisation.");
+          BMDConsole.warn("Error drawing texture " + this.image + ". Has this texture been preloaded? If so, check spelling and capitalisation.");
           this.#errored = true;
         }
       }
       catch (error) {
         if (!this.#errored) {
-          console.error("No texture defined for drawer! Error: " + error)
+          BMDConsole.error("No texture defined for drawer! Error: " + error)
           this.#errored = true;
         }
       }

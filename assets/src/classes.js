@@ -962,29 +962,51 @@ class Bloon extends Entity {
   }
   constructor(world, map, trackIndex, type, typeName) {
     let track = map.tracks[trackIndex];
+    let toRemove = false;
+    if (!map){
+      toRemove = true
+    }
     if (!track) {
-      console.warn(
-        "Track " + trackIndex + " does not exist on map " + map.displayName
+      BMDConsole.warn(
+        "Track " + trackIndex + " does not exist on map '" + map.displayName + "', defaulting to 0"
       );
       track = map.tracks[0];
     }
+    if (!track) {
+      BMDConsole.error(
+        "Map '" + map.displayName + "' has no tracks"
+      );
+      toRemove = true
+    }
+    if (!track.points) {
+      BMDConsole.error(
+        "Track " + trackIndex + " on map '" + map.displayName + "' has no points"
+      );
+      toRemove = true
+    }
     super(
       world,
-      track.points[0].x,
-      track.points[0].y,
+      toRemove?0:track.points[0].x,
+      toRemove?0:track.points[0].y,
       type.health,
       type.speed,
       type.drawer,
       type.size
     );
     this.showHealthbar = false;
-    this.track = map.tracks[trackIndex];
+    this.track = track;
     this.map = map;
     this.trackIndex = trackIndex;
     this.child = type.child;
     this.numChildren = type.numChildren;
     this.type = type;
     this.typeName = typeName;
+    if(toRemove){
+      BMDConsole.error(
+        "=> Bloon cannot exist"
+      );
+      this.remove()
+    }
   }
   damage(amount, damageSource, hideParticles = true) {
     this.damageSource = damageSource;
@@ -1090,7 +1112,7 @@ class Bloon extends Entity {
     let currentPoint = this.track.points[this.trackPoint];
     let nextPoint = this.track.points[this.trackPoint + 1];
     if (currentPoint == null) {
-      console.warn("Track has no points!");
+      BMDConsole.warn("Track has no points!");
       this.remove();
     }
     if (nextPoint == null) {
@@ -1255,7 +1277,7 @@ class Tower extends Entity {
     if (Tower.targetingPriorities.includes(prio)) {
       this._targetPriority = prio;
     } else {
-      console.warn(
+      BMDConsole.warn(
         "Targeting priority '" +
           prio +
           "' does not exist, or has not been implemented yet."

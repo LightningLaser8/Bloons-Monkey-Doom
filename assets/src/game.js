@@ -124,14 +124,13 @@ function setup() {
 /** Makes a bloon on the current map. Optionally takes a parameter for the track index to place the bloon on. */
 function makeBloon(type = "red", trackIndex = 0) {
   if (!bloonRegistry.get(type)) {
-    console.error("Invalid bloon type: '" + type + "'\n > Does not exist");
+    BMDConsole.error("Invalid bloon type: '" + type + "' (Does not exist)");
     return;
   }
   if (!bloonRegistry.get(type).create) {
-    console.error(
-      "Invalid bloon type: '" + type + "'\n > No 'create()' function"
+    BMDConsole.error(
+      "Invalid bloon type: '" + type + "' (No 'create()' function)"
     );
-    console.log(bloonRegistry.get(type));
     return;
   }
   let blon = bloonRegistry.get(type).create(world, game.map, trackIndex);
@@ -144,6 +143,11 @@ function mousePressed() {}
 function keyPressed() {}
 
 function draw() {
+  handleErrors(tick)
+  renderConsole(0, 700, LEFT)
+}
+
+function tick(){
   clear();
   tickMouse();
   if (state === "start-menu") {
@@ -156,7 +160,7 @@ function draw() {
     drawOffsetGame();
     drawInGameUI();
   } else {
-    console.error("Invalid game state: '" + state + "'");
+    BMDConsole.error("Invalid game state: '" + state + "'");
     state = "start-menu";
   }
 }
@@ -701,7 +705,6 @@ function drawInGameUI() {
 
   //draw sidebar
   drawSidebar();
-
   pop();
 }
 
@@ -788,12 +791,12 @@ function drawSidebar() {
 function bloonSendButton(x, y, bloon) {
   let img = images.art[bloon] ?? images.bloons[bloon];
   if (!img) {
-    console.error("Image not found for bloon " + bloon);
+    BMDConsole.error("Image not found for bloon " + bloon);
     img = noTextureError;
   }
   image(img, x - 70, y, img.width / 2, img.height / 2);
   if (game.inventory.bloons[bloon + "s"] == null) {
-    console.error("There is no slot in your inventory for " + bloon + "s");
+    BMDConsole.error("There is no slot in your inventory for " + bloon + "s");
     return;
   }
 
@@ -820,12 +823,12 @@ function bloonSendButton(x, y, bloon) {
 function bloonBuyButton(x, y, bloon, price) {
   let img = images.art[bloon] ?? images.bloons[bloon];
   if (!img) {
-    console.error("Image not found for bloon '" + bloon + "'");
+    BMDConsole.error("Image not found for bloon '" + bloon + "'");
     img = noTextureError;
   }
   image(img, x - 70, y, img.width / 2, img.height / 2);
   if (game.inventory.bloons[bloon + "s"] == null) {
-    console.error("There is no slot in your inventory for '" + bloon + "'s");
+    BMDConsole.error("There is no slot in your inventory for '" + bloon + "'s");
     return;
   }
 

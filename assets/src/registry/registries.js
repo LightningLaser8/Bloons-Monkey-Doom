@@ -22,7 +22,7 @@ class Registry {
    */
   get(name) {
     if (this.#registry[name] == null) {
-      console.warn(
+      BMDConsole.warn(
         "Item '" +
           name +
           "' does not exist in registry for " +
