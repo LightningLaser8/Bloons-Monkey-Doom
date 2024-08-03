@@ -963,31 +963,37 @@ class Bloon extends Entity {
   constructor(world, map, trackIndex, type, typeName) {
     let track = map.tracks[trackIndex];
     let toRemove = false;
-    if (!map){
-      toRemove = true
+    if (!map) {
+      toRemove = true;
     }
     if (!track) {
       BMDConsole.warn(
-        "Track " + trackIndex + " does not exist on map '" + map.displayName + "', defaulting to 0"
+        "Track " +
+          trackIndex +
+          " does not exist on map '" +
+          map.displayName +
+          "', defaulting to 0"
       );
       track = map.tracks[0];
     }
     if (!track) {
-      BMDConsole.error(
-        "Map '" + map.displayName + "' has no tracks"
-      );
-      toRemove = true
+      BMDConsole.error("Map '" + map.displayName + "' has no tracks");
+      toRemove = true;
     }
     if (!track.points) {
       BMDConsole.error(
-        "Track " + trackIndex + " on map '" + map.displayName + "' has no points"
+        "Track " +
+          trackIndex +
+          " on map '" +
+          map.displayName +
+          "' has no points"
       );
-      toRemove = true
+      toRemove = true;
     }
     super(
       world,
-      toRemove?0:track.points[0].x,
-      toRemove?0:track.points[0].y,
+      toRemove ? 0 : track.points[0].x,
+      toRemove ? 0 : track.points[0].y,
       type.health,
       type.speed,
       type.drawer,
@@ -1001,11 +1007,9 @@ class Bloon extends Entity {
     this.numChildren = type.numChildren;
     this.type = type;
     this.typeName = typeName;
-    if(toRemove){
-      BMDConsole.error(
-        "=> Bloon cannot exist"
-      );
-      this.remove()
+    if (toRemove) {
+      BMDConsole.error("=> Bloon cannot exist");
+      this.remove();
     }
   }
   damage(amount, damageSource, hideParticles = true) {
@@ -1109,29 +1113,34 @@ class Bloon extends Entity {
     }
   }
   tickExt() {
+    if (this?.track?.points) {
+      BMDConsole.error("Track has no points!");
+      this.remove();
+      return;
+    }
     let currentPoint = this.track.points[this.trackPoint];
     let nextPoint = this.track.points[this.trackPoint + 1];
     if (currentPoint == null) {
-      BMDConsole.warn("Track has no points!");
+      BMDConsole.error("Track has no points!");
       this.remove();
+      return;
     }
     if (nextPoint == null) {
       this.leaked = true;
       this.remove();
-    } else {
-      let delta = convertToVector(nextPoint).subtract(
-        convertToVector(this.getPos())
-      );
-      let move = delta.getUnitVector().getScaledVector(this.actualSpeed);
-      this.x += move.x;
-      this.y += move.y;
-      this.progress += this.actualSpeed;
-      if (this.getPos().distanceTo(nextPoint) <= this.actualSpeed * 2) {
-        this.x = nextPoint.x;
-        this.y = nextPoint.y;
-        this.trackPoint++;
-      }
-      //console.log(logPoint(nextPoint)+" => "+logPoint(this.getPos())+": "+this.getPos().distanceTo(nextPoint)+" ["+logPoint(delta)+"]")
+      return;
+    }
+    let delta = convertToVector(nextPoint).subtract(
+      convertToVector(this.getPos())
+    );
+    let move = delta.getUnitVector().getScaledVector(this.actualSpeed);
+    this.x += move.x;
+    this.y += move.y;
+    this.progress += this.actualSpeed;
+    if (this.getPos().distanceTo(nextPoint) <= this.actualSpeed * 2) {
+      this.x = nextPoint.x;
+      this.y = nextPoint.y;
+      this.trackPoint++;
     }
   }
 }
@@ -1169,7 +1178,10 @@ class Tower extends Entity {
     if (this._targetPriority === "close") {
       let minDist = Infinity;
       for (let e of this.world.bloons) {
-        if (this.global || this.getPos().distanceTo(e.getPos()) <= this.range + e.size) {
+        if (
+          this.global ||
+          this.getPos().distanceTo(e.getPos()) <= this.range + e.size
+        ) {
           if (dist < minDist) {
             minDist = dist;
             finalDist = minDist;
@@ -1180,7 +1192,10 @@ class Tower extends Entity {
     } else if (this._targetPriority === "far") {
       let maxDist = 0;
       for (let e of this.world.bloons) {
-        if (this.global || this.getPos().distanceTo(e.getPos()) <= this.range + e.size) {
+        if (
+          this.global ||
+          this.getPos().distanceTo(e.getPos()) <= this.range + e.size
+        ) {
           if (dist > maxDist) {
             maxDist = dist;
             finalDist = maxDist;
@@ -1191,7 +1206,10 @@ class Tower extends Entity {
     } else if (this._targetPriority === "last") {
       let minProgress = Infinity;
       for (let e of this.world.bloons) {
-        if (this.global || this.getPos().distanceTo(e.getPos()) <= this.range + e.size) {
+        if (
+          this.global ||
+          this.getPos().distanceTo(e.getPos()) <= this.range + e.size
+        ) {
           if (e.progress < minProgress) {
             minProgress = e.progress;
             finalDist = dist;
@@ -1202,7 +1220,10 @@ class Tower extends Entity {
     } else if (this._targetPriority === "first") {
       let maxProgress = 0;
       for (let e of this.world.bloons) {
-        if (this.global || this.getPos().distanceTo(e.getPos()) <= this.range + e.size) {
+        if (
+          this.global ||
+          this.getPos().distanceTo(e.getPos()) <= this.range + e.size
+        ) {
           if (e.progress > maxProgress) {
             maxProgress = e.progress;
             finalDist = dist;
@@ -1213,7 +1234,10 @@ class Tower extends Entity {
     } else if (this._targetPriority === "strong") {
       let maxDifficulty = -Infinity;
       for (let e of this.world.bloons) {
-        if (this.global || this.getPos().distanceTo(e.getPos()) <= this.range + e.size) {
+        if (
+          this.global ||
+          this.getPos().distanceTo(e.getPos()) <= this.range + e.size
+        ) {
           if (e.type.difficulty > maxDifficulty) {
             maxDifficulty = e.type.difficulty;
             finalDist = dist;
@@ -1270,7 +1294,8 @@ class Tower extends Entity {
         this.y - this.size - textSize() * 1.12
       );
       text(this.pops + " pops", this.x, this.y + this.size + textSize() * 1.12);
-      if(this.global) text("Global range!", this.x, this.y + this.size + textSize() * 2.12);
+      if (this.global)
+        text("Global range!", this.x, this.y + this.size + textSize() * 2.12);
     }
   }
   setTargetingPrio(prio) {
@@ -1285,8 +1310,6 @@ class Tower extends Entity {
     }
   }
 }
-
-
 
 function logPoint(point) {
   return "(x: " + point.x + ", y: " + point.y + ")";

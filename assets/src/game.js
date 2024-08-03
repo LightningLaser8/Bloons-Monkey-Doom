@@ -160,7 +160,7 @@ function tick(){
     drawOffsetGame();
     drawInGameUI();
   } else {
-    BMDConsole.error("Invalid game state: '" + state + "'");
+    BMDConsole.warn("Invalid game state: '" + state + "', reverting to 'start-menu'");
     state = "start-menu";
   }
 }
@@ -791,7 +791,7 @@ function drawSidebar() {
 function bloonSendButton(x, y, bloon) {
   let img = images.art[bloon] ?? images.bloons[bloon];
   if (!img) {
-    BMDConsole.error("Image not found for bloon " + bloon);
+    BMDConsole.warn("Image not found for bloon " + bloon);
     img = noTextureError;
   }
   image(img, x - 70, y, img.width / 2, img.height / 2);
@@ -823,7 +823,7 @@ function bloonSendButton(x, y, bloon) {
 function bloonBuyButton(x, y, bloon, price) {
   let img = images.art[bloon] ?? images.bloons[bloon];
   if (!img) {
-    BMDConsole.error("Image not found for bloon '" + bloon + "'");
+    BMDConsole.warn("Image not found for bloon '" + bloon + "'");
     img = noTextureError;
   }
   image(img, x - 70, y, img.width / 2, img.height / 2);
