@@ -206,7 +206,7 @@ function handleErrors(fn, consoleToUse = BMDConsole, stop = true){
  * Renders a console's history as a list. Also ticks message times.
  * @param {number} x Offset from the left of the screen to draw at.
  * @param {number} y Offset from the top of the screen to draw at.
- * @param horizontalAlign Either `CENTER`, `LEFT`, `RIGHT`. Alignment to either the middle, the left or right.
+ * @param horizontalAlign Either `CENTER`, `LEFT`, `RIGHT` => `x` designates either the middle, the left or right.
  * @param {InGameConsole} [consoleToUse=BMDConsole] The console to render.
  */
 function renderConsole(x, y, horizontalAlign, consoleToUse = BMDConsole){
