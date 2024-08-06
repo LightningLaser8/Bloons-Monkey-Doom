@@ -43,9 +43,9 @@ let game = {
   level: 0,
   /** Map the game is in. */
   map: null,
-  /** Difficulty of the current game, not map. Affects tower spawning. */
+  difficulty: 0,
   round: 0,
-  lives: 100
+  lives: 100,
 };
 /** Contains properties relating to the user interface */
 let ui = {
@@ -80,11 +80,13 @@ let { world, player } = game;
 
 let sortedMaps;
 
-loadGameFrom(mapRegistry.get("grasslands"));
+loadGameFrom(mapRegistry.get("grasslands")); //To stop errors on load
+changeGameState("start-menu");
 
 let particleLayer, lightingLayer;
 let luckiestGuyStatic;
-let gameEndDelay = 0, gameEndStarted = false;
+let gameEndDelay = 0,
+  gameEndStarted = false;
 
 function preload() {
   noTextureError = loadImage("assets/textures/error.png");
@@ -148,7 +150,7 @@ function draw() {
   if (game.state === "start-menu") {
     startMenu();
   } else if (game.state === "map-select") {
-    selectMenu();
+    mapSelectMenu();
   } else if (game.state === "game") {
     image(images.maps[game.map.background], 400, 400, 800, 800);
     gameLoop();
@@ -158,28 +160,27 @@ function draw() {
     image(images.maps[game.map.background], 400, 400, 800, 800);
     tickParticles();
     drawOffsetGame();
-    drawExtraInfo()
+    drawExtraInfo();
     //Moneys
-    drawMoneyCounter()
+    drawMoneyCounter();
     //XP and level
-    drawXP()
+    drawXP();
     drawMonkeyHealthbar();
-    
-    if(!gameEndStarted && bloonDespawnEventTick()){
-      gameEndDelay = 100
-      gameEndStarted = true
+
+    if (!gameEndStarted && bloonDespawnEventTick()) {
+      gameEndDelay = 100;
+      gameEndStarted = true;
     }
-    if(gameEndStarted){
-      if(gameEndDelay <= 0){
-        game.state = "start-menu"
-      }
-      else{
-        gameEndDelay --
+    if (gameEndStarted) {
+      if (gameEndDelay <= 0) {
+        changeGameState("start-menu");
+      } else {
+        gameEndDelay--;
       }
     }
   } else {
     console.error("Invalid game state: '" + game.state + "'");
-    game.state = "start-menu";
+    changeGameState("start-menu");
   }
 }
 
@@ -238,17 +239,18 @@ function gameLoop() {
   tickBullets();
   tickParticles();
 
-  if(game.lives <= 0){
-    if(game.round >= game.map.lastRound){
-      game.inventory.bloon_gold += game.map.reward;
-      game.round = 0
-      game.lives = 0
+  if (game.lives <= 0) {
+    if (game.round >= game.map.difficulties[game.difficulty].lastRound) {
+      game.inventory.bloon_gold +=
+        game.map.difficulties[game.difficulty].reward;
+      game.round = 0;
+      game.lives = 0;
       world.towers.splice(0, world.towers.length);
-      game.state = "winning-sequence"
-    }
-    else{
-      game.round ++
-      game.inventory.cash += game.map.perRoundCashBonus
+      game.state = "winning-sequence";
+    } else {
+      game.round++;
+      game.inventory.cash +=
+        game.map.difficulties[game.difficulty].perRoundCashBonus;
       loadCurrentRoundFrom(game.map);
     }
   }
@@ -409,8 +411,9 @@ function startMenu() {
     text("Map: " + game.map.displayName, 400, 770);
     pop();
   }
-  button(400, 700, 200, 80, "Start", () => { //x: 340, width: 150
-    game.state = "map-select";
+  button(400, 700, 200, 80, "Start", () => {
+    //x: 340, width: 150
+    changeGameState("map-select");
   });
   // button(490, 700, 80, 80, "Map\nSelect", () => {
   //   game.state = "map-select";
@@ -419,19 +422,27 @@ function startMenu() {
   pop();
 }
 
-function selectMenu() {
+function mapSelectMenu() {
   background(colours.ui.background);
+
+  push();
+  fill(colours.ui.accent);
+  rectMode(CORNERS);
+  rect(40, 60, 760, 600);
+  rectMode(CENTER);
+  rect(675, 740, 200, 70);
+  pop();
 
   {
     //for(let difficulty = 0; difficulty < sortedMaps.length; difficulty ++){
     let difficulty = ui.mapPageDifficulty;
     push();
     let showX = 160,
-      showY = 160;
+      showY = 180;
     noStroke();
     fill(...colours.ui.buttons.contrast);
     textSize(50);
-    text(names.difficulties[difficulty] + " Maps", 400, 30);
+    text(names.map_difficulties[difficulty] + " Maps", 400, 30);
     let len = Math.min(6, sortedMaps[difficulty].length);
     for (let mapIndex = 0; mapIndex < len; mapIndex++) {
       let map = sortedMaps[difficulty][mapIndex + 6 * (ui.mapMenuPage - 1)];
@@ -447,6 +458,31 @@ function selectMenu() {
         break;
       }
     }
+    if (difficulty > 0) {
+      button(100, 30, 50, 50, "<", () => {
+        ui.mapPageDifficulty--;
+      });
+    }
+    if (difficulty < 4) {
+      button(700, 30, 50, 50, ">", () => {
+        ui.mapPageDifficulty++;
+      });
+    }
+    textSize(20);
+    fill(colours.ui.buttons.contrast);
+    text("Difficulty:", 675, 720);
+    text(names.game_difficulties[game.difficulty], 675, 750);
+    if (game.difficulty > 0) {
+      button(600, 750, 30, 30, "<", () => {
+        game.difficulty--;
+      });
+    }
+    if (game.difficulty < 3) {
+      button(750, 750, 30, 30, ">", () => {
+        game.difficulty++;
+      });
+    }
+
     pop();
     //}
   }
@@ -463,10 +499,12 @@ function selectMenu() {
       ui.mapMenuPage--;
     });
   }
-  button(40, 20, 50, 30, "Back", () => {
-    game.state = "start-menu";
+  button(40, 30, 50, 30, "Back", () => {
+    changeGameState("start-menu");
   });
 }
+
+
 
 function showTitleAt(x, y) {
   noStroke();
@@ -565,7 +603,8 @@ function imageButton(
   height = 30,
   shownImage = error,
   onPress = () => {},
-  draw = true
+  draw = true,
+  unavailable = false
 ) {
   push();
   if (draw) {
@@ -590,8 +629,11 @@ function imageButton(
       fill(...colours.ui.buttons.main);
     }
   }
+  if (draw && unavailable) {
+    tint(100, 0, 0);
+  }
   if (mouseIsPressed && !waitingForKeyRelease) {
-    if (hovered) {
+    if (hovered && !unavailable) {
       waitingForKeyRelease = true;
       onPress();
     }
@@ -613,10 +655,11 @@ function captionedImageButton(
   shownImage = error,
   shownText = "",
   onPress = () => {},
-  draw = true
+  draw = true,
+  unavailable = false
 ) {
   push();
-  imageButton(x, y, width, height, shownImage, onPress, draw);
+  imageButton(x, y, width, height, shownImage, onPress, draw, unavailable);
   textSize(30); //starting point for checks
   textSize(((textSize() * width) / textWidth(shownText)) * 0.8);
   fill(...colours.ui.buttons.contrast);
@@ -627,6 +670,7 @@ function captionedImageButton(
 }
 
 function mapButton(x, y, map) {
+  push();
   captionedImageButton(
     x,
     y,
@@ -637,16 +681,36 @@ function mapButton(x, y, map) {
     () => {
       game.map = map;
       loadCurrentRoundFrom(game.map);
-      game.state = "game";
+      changeGameState("game");
       setTitleBarExtras(": " + map.displayName);
       refreshWindowTitle();
-    }
+    },
+    true,
+    !map.difficulties[game.difficulty]
   );
-  let off = textSize()
-  textSize(15)
-  let extraInfo = "Rounds: "+(map.lastRound + 1)+" | Reward: "+map.reward+"   "
-  text(extraInfo, x, y + off + 103)
-  image(images.ui.bloon_gold, x + textWidth(extraInfo)/2, y + off + 103, 12, 15)
+  let off = 45;
+  textSize(15);
+  let extraInfo;
+  if (map.difficulties[game.difficulty]) {
+    extraInfo =
+      "Rounds: " +
+      (map.difficulties[game.difficulty].lastRound + 1) +
+      " | Reward: " +
+      map.difficulties[game.difficulty].reward +
+      "   ";
+  } else {
+    extraInfo = "Map unavailable";
+  }
+  text(extraInfo, x, y + off + 103);
+  if (map.difficulties[game.difficulty])
+    image(
+      images.ui.bloon_gold,
+      x + textWidth(extraInfo) / 2,
+      y + off + 103,
+      12,
+      15
+    );
+  pop();
 }
 
 function drawInGameUI() {
@@ -654,11 +718,11 @@ function drawInGameUI() {
   fill(0, 255, 255);
   noStroke();
 
-  drawExtraInfo()
+  drawExtraInfo();
   //Moneys
-  drawMoneyCounter()
+  drawMoneyCounter();
   //XP and level
-  drawXP()
+  drawXP();
 
   button(730, 770, 100, 40, "Shop", () => {
     ui.sidebar = "bloons-shop";
@@ -671,7 +735,7 @@ function drawInGameUI() {
   //draw sidebar
   drawSidebar();
 
-  drawMonkeyHealthbar()
+  drawMonkeyHealthbar();
 
   pop();
 }
@@ -696,7 +760,7 @@ function drawXP() {
   pop();
 }
 
-function drawMoneyCounter(){
+function drawMoneyCounter() {
   let originX = 235;
   let originY = 25;
   push();
@@ -724,7 +788,7 @@ function drawMoneyCounter(){
   pop();
 }
 
-function drawExtraInfo(){
+function drawExtraInfo() {
   //FPS counter
   {
     push();
@@ -803,7 +867,6 @@ function drawSidebar() {
       )
     );
     text(ui.orderedBloonTypes[ui.selectedBloonType], 700, 140, 100);
-
   }
   if (ui.sidebar === "bloons-shop") {
     stroke(255);
@@ -1032,9 +1095,9 @@ function splashDamageInstance(
   }
 }
 
-function loadGameFrom(map){
-  game.map = map
-  game.round = 0
+function loadGameFrom(map) {
+  game.map = map;
+  game.round = 0;
   world.towers.splice(0, world.towers.length);
   loadCurrentRoundFrom(map);
   setTitleBarExtras(": " + map.displayName);
@@ -1043,22 +1106,23 @@ function loadGameFrom(map){
 
 function loadCurrentRoundFrom(map) {
   world.towers.splice(0, world.towers.length);
-  if(!map) return;
-  if(!map.rounds) return;
-  for (let tower of map.rounds[game.round].towers) {
-    let towerType = tower.type
-    if(towerType.split(":").length === 1){
-      towerType = towerType + ":0"
+  if (!map) return;
+  if (!map.difficulties[game.difficulty].rounds) return;
+  for (let tower of map.difficulties[game.difficulty].rounds[game.round]
+    .towers) {
+    let towerType = tower.type;
+    if (towerType.split(":").length === 1) {
+      towerType = towerType + ":0";
     }
-    let towerClass = towerRegistry.get(towerType)
+    let towerClass = towerRegistry.get(towerType);
     let createdTower = new towerClass(world, tower.x, tower.y);
     createdTower.setTargetingPrio(tower.target ?? "first");
-    if(tower.effect){
-      createVisualEffect(tower.effect, tower.x, tower.y)
+    if (tower.effect) {
+      createVisualEffect(tower.effect, tower.x, tower.y);
     }
     world.towers.push(createdTower);
   }
-  game.lives = map.rounds[game.round].lives
+  game.lives = map.difficulties[game.difficulty].rounds[game.round].lives;
 }
 
 function setTitleBarExtras(text) {
@@ -1067,8 +1131,11 @@ function setTitleBarExtras(text) {
 
 function refreshWindowTitle() {
   document.querySelector("title").innerText =
-    (game.map?.displayName ? game.map.displayName + " - " : "") +
-    "Bloons Monkey Doom";
+    game.state === "game"
+      ? game.map?.displayName
+        ? game.map.displayName + " - "
+        : ""
+      : "" + "Bloons Monkey Doom";
 }
 
 function createVisualEffect(effectName, x, y, direction) {
@@ -1078,44 +1145,78 @@ function createVisualEffect(effectName, x, y, direction) {
   effect.create(world, x, y, direction);
 }
 
-function drawMonkeyHealthbar(){
-  push()
-  textSize(10)
-  stroke(0)
-  strokeWeight(5)
-  fill(0)
-  rect(400, 770, 400, 20)
-  rectMode(CORNER)
-  fill(255, 0, 0)
-  rect(200, 760, 400 * (game.lives/game.map.rounds[game.round].lives), 20)
-  textAlign(LEFT, CENTER)
-  fill(255)
-  strokeWeight(2)
-  text("Lives: "+game.lives+" / "+game.map.rounds[game.round].lives, 220, 770)
-  textSize(20)
-  textAlign(CENTER, CENTER)
-  text("Round "+(game.round + 1)+" of "+(game.map.lastRound + 1), 400, 747)
-  pop()
+function drawMonkeyHealthbar() {
+  push();
+  textSize(10);
+  stroke(0);
+  strokeWeight(5);
+  fill(0);
+  rect(400, 770, 400, 20);
+  rectMode(CORNER);
+  fill(255, 0, 0);
+  rect(
+    200,
+    760,
+    400 *
+      (game.lives /
+        game.map.difficulties[game.difficulty].rounds[game.round].lives),
+    20
+  );
+  textAlign(LEFT, CENTER);
+  fill(255);
+  strokeWeight(2);
+  text(
+    "Lives: " +
+      game.lives +
+      " / " +
+      game.map.difficulties[game.difficulty].rounds[game.round].lives,
+    220,
+    770
+  );
+  textSize(20);
+  textAlign(CENTER, CENTER);
+  text(
+    "Round " +
+      (game.round + 1) +
+      " of " +
+      (game.map.difficulties[game.difficulty].lastRound + 1),
+    400,
+    747
+  );
+  pop();
 }
 
-function bloonDespawnEventTick(){
-  if(timer(10)){
-    if(world.bloons.length > 0){
-      let bloonIndexToRemove = rnd(0, world.bloons.length)
-      let bloon = world.bloons[bloonIndexToRemove]
-      if(bloon){
-        createVisualEffect("despawn", bloon.x, bloon.y, 0)
+function bloonDespawnEventTick() {
+  if (timer(10)) {
+    if (world.bloons.length > 0) {
+      let bloonIndexToRemove = rnd(0, world.bloons.length);
+      let bloon = world.bloons[bloonIndexToRemove];
+      if (bloon) {
+        createVisualEffect("despawn", bloon.x, bloon.y, 0);
         game.xp += rewards.xp.bloons[bloon.typeName] * 2;
       }
-      world.bloons.splice(bloonIndexToRemove, 1)
-    }
-    else{
-      return true
+      world.bloons.splice(bloonIndexToRemove, 1);
+    } else {
+      return true;
     }
   }
-  return false
+  return false;
 }
 
-function timer(frames){
-  return frameCount % frames === 0
+function timer(frames) {
+  return frameCount % frames === 0;
+}
+
+function changeGameState(state) {
+  game.state = state;
+  if (state !== game)
+    setTitleBarExtras(
+      title.extras[state] ??
+        ": " +
+          state
+            .split("-")
+            .map((x) => x.charAt(0).toUpperCase() + x.slice(1))
+            .join(" ")
+    );
+  refreshWindowTitle();
 }

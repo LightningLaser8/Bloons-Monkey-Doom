@@ -136,8 +136,18 @@ const rewards = {
 };
 
 const names = {
-  difficulties: ["Beginner", "Intermediate", "Advanced", "Expert", "Master"],
+  map_difficulties: ["Beginner", "Intermediate", "Advanced", "Expert", "Master"],
+  game_difficulties: ["Easy", "Medium", "Hard", "Impossible"]
 };
+
+const title = {
+  /** Localised names for the title bar extras. */
+  extras: {
+    "start-menu": "",
+    "map-select": ": Map Selector",
+    "game": ": In Game"
+  }
+}
 
 function setupAnimations() {
   ui.anims = {

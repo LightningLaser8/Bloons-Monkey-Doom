@@ -35,8 +35,6 @@ towerRegistry.add(
         damage: 2,
         size: 10,
         drawer: new DrawShape("rect", [255, 0, 0], [255, 0, 0], 0, 4, 6),
-        trailColour: [255, 0, 0],
-        trailSize: 2,
         hitEffect: "sniper_hit",
         shootEffect: "sniper_fire",
       };
@@ -65,8 +63,6 @@ towerRegistry.add(
         damage: 4,
         size: 10,
         drawer: new DrawShape("rect", [255, 0, 0], [255, 0, 0], 0, 4, 6),
-        trailColour: [255, 0, 0],
-        trailSize: 2,
         hitEffect: "sniper_hit",
         shootEffect: "sniper_fire",
       };
@@ -95,8 +91,6 @@ towerRegistry.add(
         damage: 7,
         size: 10,
         drawer: new DrawShape("rect", [255, 0, 0], [255, 0, 0], 0, 4, 6),
-        trailColour: [255, 0, 0],
-        trailSize: 2,
         hitEffect: "sniper_hit",
         shootEffect: "sniper_fire",
       };
