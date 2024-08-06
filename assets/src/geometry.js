@@ -834,3 +834,11 @@ function rnd(a, b) {
 function rndScl(a, b, scl){
   return rnd(a*scl, b*scl)/scl
 }
+
+function degToRad(degrees){
+  return degrees/180 * Math.PI
+}
+
+function radToDeg(radians){
+  return radians/Math.PI * 180
+}

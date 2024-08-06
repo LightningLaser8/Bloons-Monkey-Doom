@@ -27,6 +27,66 @@ towerRegistry.add(
   }
 );
 towerRegistry.add(
+  "test_sniper:0",
+  class TestSniper extends Tower {
+    constructor(world, x, y) {
+      let bulletToAdd = {
+        type: PointBullet,
+        damage: 2,
+        size: 10,
+        drawer: new DrawShape("rect", [255, 0, 0], [255, 0, 0], 0, 4, 6),
+        trailColour: [255, 0, 0],
+        trailSize: 2,
+        hitEffect: "sniper_hit",
+        shootEffect: "sniper_fire",
+      };
+      super(
+        world,
+        x,
+        y,
+        new DrawShape("rect", [255, 0, 0], [0, 0, 0], 3, 10, 20),
+        bulletToAdd,
+        90,
+        20,
+        10
+      );
+      this.displayName = "Test Sniper";
+      this.tier = 0;
+      this.global = true;
+    }
+  }
+);
+towerRegistry.add(
+  "test_sniper:1",
+  class TestSniper extends Tower {
+    constructor(world, x, y) {
+      let bulletToAdd = {
+        type: PointBullet,
+        damage: 4,
+        size: 10,
+        drawer: new DrawShape("rect", [255, 0, 0], [255, 0, 0], 0, 4, 6),
+        trailColour: [255, 0, 0],
+        trailSize: 2,
+        hitEffect: "sniper_hit",
+        shootEffect: "sniper_fire",
+      };
+      super(
+        world,
+        x,
+        y,
+        new DrawShape("rect", [255, 0, 0], [0, 0, 0], 3, 10, 20),
+        bulletToAdd,
+        90,
+        20,
+        10
+      );
+      this.displayName = "Test Sniper";
+      this.tier = 1;
+      this.global = true;
+    }
+  }
+);
+towerRegistry.add(
   "test_sniper:2",
   class TestSniper extends Tower {
     constructor(world, x, y) {

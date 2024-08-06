@@ -46,14 +46,14 @@ class ParticleEffect extends VisualEffect {
     rotateSpeed
   ) {
     super(function (world, x, y, inDirection) {
-      let dir = useParentDirection ? inDirection + radians(direction) : direction;
+      let dir = useParentDirection ? inDirection + degToRad(direction) : direction;
       let offVct = angleToVector(dir).getScaledVector(offset);
       for (let i = 0; i < count; i++) {
         world.particles.push(
           new ShapeParticle(
             x + offVct.x,
             y + offVct.y,
-            dir + radians(rnd(spread / 2, -spread / 2)),
+            dir + degToRad(rnd(spread / 2, -spread / 2)),
             lifetime,
             speed,
             decel,
@@ -98,7 +98,7 @@ class WaveParticleEffect extends VisualEffect {
     });
   }
 }
-class MultiEffect extends VisualEffect {
+class MultiEffect {
   #effects = [];
   #byRef = false;
   /**
@@ -116,7 +116,7 @@ class MultiEffect extends VisualEffect {
       if (this.#byRef) {
         effect = effectRegistry.get(e);
       }
-      e.create(world, x, y, direction);
+      effect.create(world, x, y, direction);
     }
   }
 }
@@ -161,4 +161,79 @@ effectRegistry.add(
     20,
     0
   )
+);
+
+effectRegistry.add(
+  "upgrade",
+  new MultiEffect([
+    new ParticleEffect(
+      5,
+      false,
+      0,
+      0,
+      360,
+      30,
+      3,
+      0,
+      "rhombus",
+      [255, 255, 100],
+      [200, 200, 200, 0],
+      30,
+      30,
+      10,
+      0,
+      2
+    ),
+    new WaveParticleEffect(
+      20,
+      0,
+      80,
+      [255, 255, 255],
+      [200, 200, 200, 0],
+      5,
+      1
+    ),
+    new WaveParticleEffect(
+      40,
+      0,
+      100,
+      [255, 255, 255],
+      [200, 200, 200, 0],
+      6,
+      2
+    )
+  ])
+);
+
+effectRegistry.add(
+  "place",
+  new MultiEffect([
+    new ParticleEffect(
+      5,
+      false,
+      0,
+      0,
+      360,
+      30,
+      3,
+      0,
+      "rhombus",
+      [255, 255, 255],
+      [200, 200, 200, 0],
+      30,
+      30,
+      10,
+      0,
+      0
+    ),
+    new WaveParticleEffect(
+      20,
+      0,
+      80,
+      [255, 255, 255],
+      [200, 200, 200, 0],
+      5,
+      1
+    )
+  ])
 );

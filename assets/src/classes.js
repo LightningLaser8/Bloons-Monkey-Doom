@@ -1032,6 +1032,7 @@ class Bloon extends Entity {
       }
       game.xp += rewards.xp.bloons[this.typeName];
       game.inventory.cash += 4; //not too sure about this
+      game.lives --
     } else {
       this.world.particles.push(
         new WaveParticle(
@@ -1143,11 +1144,12 @@ class Tower extends Entity {
   }
   findTarget() {
     let target,
-      finalDist = 0;
+      finalDist = 0, dist = Infinity;
     if (this._targetPriority === "close") {
       let minDist = Infinity;
       for (let e of this.world.bloons) {
-        if (this.global || this.getPos().distanceTo(e.getPos()) <= this.range + e.size) {
+        dist = this.getPos().distanceTo(e.getPos())
+        if (this.global || dist <= this.range + e.size) {
           if (dist < minDist) {
             minDist = dist;
             finalDist = minDist;
@@ -1158,7 +1160,8 @@ class Tower extends Entity {
     } else if (this._targetPriority === "far") {
       let maxDist = 0;
       for (let e of this.world.bloons) {
-        if (this.global || this.getPos().distanceTo(e.getPos()) <= this.range + e.size) {
+        dist = this.getPos().distanceTo(e.getPos())
+        if (this.global || dist <= this.range + e.size) {
           if (dist > maxDist) {
             maxDist = dist;
             finalDist = maxDist;
@@ -1169,7 +1172,8 @@ class Tower extends Entity {
     } else if (this._targetPriority === "last") {
       let minProgress = Infinity;
       for (let e of this.world.bloons) {
-        if (this.global || this.getPos().distanceTo(e.getPos()) <= this.range + e.size) {
+        dist = this.getPos().distanceTo(e.getPos())
+        if (this.global || dist <= this.range + e.size) {
           if (e.progress < minProgress) {
             minProgress = e.progress;
             finalDist = dist;
@@ -1180,7 +1184,8 @@ class Tower extends Entity {
     } else if (this._targetPriority === "first") {
       let maxProgress = 0;
       for (let e of this.world.bloons) {
-        if (this.global || this.getPos().distanceTo(e.getPos()) <= this.range + e.size) {
+        dist = this.getPos().distanceTo(e.getPos())
+        if (this.global || dist <= this.range + e.size) {
           if (e.progress > maxProgress) {
             maxProgress = e.progress;
             finalDist = dist;
@@ -1191,7 +1196,8 @@ class Tower extends Entity {
     } else if (this._targetPriority === "strong") {
       let maxDifficulty = -Infinity;
       for (let e of this.world.bloons) {
-        if (this.global || this.getPos().distanceTo(e.getPos()) <= this.range + e.size) {
+        dist = this.getPos().distanceTo(e.getPos())
+        if (this.global || dist <= this.range + e.size) {
           if (e.type.difficulty > maxDifficulty) {
             maxDifficulty = e.type.difficulty;
             finalDist = dist;

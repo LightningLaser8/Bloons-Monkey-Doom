@@ -44,7 +44,8 @@ let game = {
   /** Map the game is in. */
   map: null,
   /** Difficulty of the current game, not map. Affects tower spawning. */
-  difficulty: 0
+  round: 0,
+  lives: 100
 };
 /** Contains properties relating to the user interface */
 let ui = {
@@ -75,14 +76,11 @@ let camera = {
 };
 let waitingForKeyRelease = false;
 
-let { world, player, state } = game;
+let { world, player } = game;
 
 let sortedMaps;
 
-game.map = mapRegistry.get("grasslands");
-loadTowersFrom(game.map);
-setTitleBarExtras(": Grasslands");
-refreshWindowTitle();
+loadGameFrom(mapRegistry.get("grasslands"));
 
 let particleLayer, lightingLayer;
 let luckiestGuyStatic;
@@ -146,18 +144,18 @@ function keyPressed() {}
 function draw() {
   clear();
   tickMouse();
-  if (state === "start-menu") {
+  if (game.state === "start-menu") {
     startMenu();
-  } else if (state === "map-select") {
+  } else if (game.state === "map-select") {
     selectMenu();
-  } else if (state === "game") {
+  } else if (game.state === "game") {
     image(images.maps[game.map.background], 400, 400, 800, 800);
     gameLoop();
     drawOffsetGame();
     drawInGameUI();
   } else {
-    console.error("Invalid game state: '" + state + "'");
-    state = "start-menu";
+    console.error("Invalid game state: '" + game.state + "'");
+    game.state = "start-menu";
   }
 }
 
@@ -215,12 +213,29 @@ function gameLoop() {
   tickEntities();
   tickBullets();
   tickParticles();
+
+  if(game.lives <= 0){
+    if(game.round >= game.map.lastRound){
+      game.inventory.bloon_gold += game.map.reward;
+      game.round = 0
+      game.lives = 1000
+      world.towers.splice(0, world.towers.length);
+      game.state = "start-menu"//"winning-sequence"
+    }
+    else{
+      game.round ++
+      game.inventory.cash += game.map.perRoundCashBonus
+      loadCurrentRoundFrom(game.map);
+    }
+  }
 }
 
 function drawGame() {
   drawEntities();
   drawBullets();
   drawParticles();
+
+  drawMonkeyHealthbar()
 }
 
 function tickParticles() {
@@ -372,12 +387,12 @@ function startMenu() {
     text("Map: " + game.map.displayName, 400, 770);
     pop();
   }
-  button(340, 700, 150, 80, "Start", () => {
-    state = "game";
+  button(400, 700, 200, 80, "Start", () => { //x: 340, width: 150
+    game.state = "map-select";
   });
-  button(490, 700, 80, 80, "Map\nSelect", () => {
-    state = "map-select";
-  });
+  // button(490, 700, 80, 80, "Map\nSelect", () => {
+  //   game.state = "map-select";
+  // });
 
   pop();
 }
@@ -426,6 +441,9 @@ function selectMenu() {
       ui.mapMenuPage--;
     });
   }
+  button(40, 20, 50, 30, "Back", () => {
+    game.state = "start-menu";
+  });
 }
 
 function showTitleAt(x, y) {
@@ -596,12 +614,17 @@ function mapButton(x, y, map) {
     map.displayName,
     () => {
       game.map = map;
-      loadTowersFrom(game.map);
-      state = "start-menu";
+      loadCurrentRoundFrom(game.map);
+      game.state = "game";
       setTitleBarExtras(": " + map.displayName);
       refreshWindowTitle();
     }
   );
+  let off = textSize()
+  textSize(15)
+  let extraInfo = "Rounds: "+(map.lastRound + 1)+" | Reward: "+map.reward+"   "
+  text(extraInfo, x, y + off + 103)
+  image(images.ui.bloon_gold, x + textWidth(extraInfo)/2, y + off + 103, 12, 15)
 }
 
 function drawInGameUI() {
@@ -977,11 +1000,20 @@ function splashDamageInstance(
   }
 }
 
-function loadTowersFrom(map) {
+function loadGameFrom(map){
+  game.map = map
+  game.round = 0
+  world.towers.splice(0, world.towers.length);
+  loadCurrentRoundFrom(map);
+  setTitleBarExtras(": " + map.displayName);
+  refreshWindowTitle();
+}
+
+function loadCurrentRoundFrom(map) {
   world.towers.splice(0, world.towers.length);
   if(!map) return;
-  if(!map.towers) return;
-  for (let tower of map.towers[game.difficulty]) {
+  if(!map.rounds) return;
+  for (let tower of map.rounds[game.round].towers) {
     let towerType = tower.type
     if(towerType.split(":").length === 1){
       towerType = towerType + ":0"
@@ -989,8 +1021,12 @@ function loadTowersFrom(map) {
     let towerClass = towerRegistry.get(towerType)
     let createdTower = new towerClass(world, tower.x, tower.y);
     createdTower.setTargetingPrio(tower.target ?? "first");
+    if(tower.effect){
+      createVisualEffect(tower.effect, tower.x, tower.y)
+    }
     world.towers.push(createdTower);
   }
+  game.lives = map.rounds[game.round].lives
 }
 
 function setTitleBarExtras(text) {
@@ -1008,4 +1044,24 @@ function createVisualEffect(effectName, x, y, direction) {
   const effect = effectRegistry.get(effectName);
   if (!effect) return;
   effect.create(world, x, y, direction);
+}
+
+function drawMonkeyHealthbar(){
+  push()
+  textSize(10)
+  stroke(0)
+  strokeWeight(5)
+  fill(0)
+  rect(400, 770, 400, 20)
+  rectMode(CORNER)
+  fill(255, 0, 0)
+  rect(200, 760, 400 * (game.lives/game.map.rounds[game.round].lives), 20)
+  textAlign(LEFT, CENTER)
+  fill(255)
+  strokeWeight(2)
+  text("Lives: "+game.lives+" / "+game.map.rounds[game.round].lives, 220, 770)
+  textSize(20)
+  textAlign(CENTER, CENTER)
+  text("Round "+(game.round + 1)+" of "+(game.map.lastRound + 1), 400, 747)
+  pop()
 }
