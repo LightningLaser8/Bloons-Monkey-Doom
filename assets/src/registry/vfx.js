@@ -237,3 +237,36 @@ effectRegistry.add(
     )
   ])
 );
+
+effectRegistry.add(
+  "despawn",
+  new MultiEffect([
+    new ParticleEffect(
+      10,
+      false,
+      0,
+      0,
+      360,
+      30,
+      2,
+      0,
+      "rhombus",
+      colours.ui.xp,
+      colours.ui.xp,
+      20,
+      20,
+      10,
+      0,
+      0
+    ),
+    new WaveParticleEffect(
+      20,
+      0,
+      30,
+      colours.ui.xp,
+      colours.ui.xp,
+      5,
+      1
+    )
+  ])
+);

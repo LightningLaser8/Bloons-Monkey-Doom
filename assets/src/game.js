@@ -84,6 +84,7 @@ loadGameFrom(mapRegistry.get("grasslands"));
 
 let particleLayer, lightingLayer;
 let luckiestGuyStatic;
+let gameEndDelay = 0, gameEndStarted = false;
 
 function preload() {
   noTextureError = loadImage("assets/textures/error.png");
@@ -153,6 +154,29 @@ function draw() {
     gameLoop();
     drawOffsetGame();
     drawInGameUI();
+  } else if (game.state === "winning-sequence") {
+    image(images.maps[game.map.background], 400, 400, 800, 800);
+    tickParticles();
+    drawOffsetGame();
+    drawExtraInfo()
+    //Moneys
+    drawMoneyCounter()
+    //XP and level
+    drawXP()
+    drawMonkeyHealthbar();
+    
+    if(!gameEndStarted && bloonDespawnEventTick()){
+      gameEndDelay = 100
+      gameEndStarted = true
+    }
+    if(gameEndStarted){
+      if(gameEndDelay <= 0){
+        game.state = "start-menu"
+      }
+      else{
+        gameEndDelay --
+      }
+    }
   } else {
     console.error("Invalid game state: '" + game.state + "'");
     game.state = "start-menu";
@@ -218,9 +242,9 @@ function gameLoop() {
     if(game.round >= game.map.lastRound){
       game.inventory.bloon_gold += game.map.reward;
       game.round = 0
-      game.lives = 1000
+      game.lives = 0
       world.towers.splice(0, world.towers.length);
-      game.state = "start-menu"//"winning-sequence"
+      game.state = "winning-sequence"
     }
     else{
       game.round ++
@@ -234,8 +258,6 @@ function drawGame() {
   drawEntities();
   drawBullets();
   drawParticles();
-
-  drawMonkeyHealthbar()
 }
 
 function tickParticles() {
@@ -632,6 +654,77 @@ function drawInGameUI() {
   fill(0, 255, 255);
   noStroke();
 
+  drawExtraInfo()
+  //Moneys
+  drawMoneyCounter()
+  //XP and level
+  drawXP()
+
+  button(730, 770, 100, 40, "Shop", () => {
+    ui.sidebar = "bloons-shop";
+  });
+
+  button(730, 720, 100, 40, "Bloons", () => {
+    ui.sidebar = "bloons";
+  });
+
+  //draw sidebar
+  drawSidebar();
+
+  drawMonkeyHealthbar()
+
+  pop();
+}
+
+function drawXP() {
+  game.level = game.xp; //temporary
+  push();
+  noFill();
+  stroke(...colours.ui.accent);
+  strokeWeight(5);
+  rect(40, 40, 90, 90);
+  fill(colours.ui.xp);
+  stroke(255);
+  textSize(20);
+  textSize(
+    Math.min(50, (textSize() * 100) / textWidth("$" + game.level)) * 0.8
+  );
+  textAlign(CENTER, CENTER);
+  RADImage(images.ui.xp_bg, 40, 40, 90, 90, frameCount / 60);
+  RADImage(images.ui.xp_bg, 40, 40, 90, 90, 0);
+  text(game.level, 40, 40);
+  pop();
+}
+
+function drawMoneyCounter(){
+  let originX = 235;
+  let originY = 25;
+  push();
+  fill(...colours.ui.background, 150);
+  stroke(...colours.ui.accent);
+  strokeWeight(10);
+  rect(originX, originY, 300, 60);
+  fill(colours.ui.cash);
+  noStroke();
+  textSize(20);
+  textSize(
+    Math.min(30, (textSize() * 100) / textWidth(game.inventory.cash)) * 0.8
+  );
+  textAlign(LEFT, CENTER);
+  image(images.ui.coin, originX - 120, originY - 1, 40, 40);
+  text(game.inventory.cash, originX - 100, originY + 2);
+  textSize(
+    Math.min(30, (textSize() * 100) / textWidth(game.inventory.bloon_gold)) *
+      0.8
+  );
+  textAlign(LEFT, CENTER);
+  image(images.ui.bloon_gold, originX + 2, originY - 1, 32, 40);
+  fill(colours.ui.bloon_gold);
+  text(game.inventory.bloon_gold, originX + 25, originY + 2);
+  pop();
+}
+
+function drawExtraInfo(){
   //FPS counter
   {
     push();
@@ -665,67 +758,6 @@ function drawInGameUI() {
     );
     pop();
   }
-  //Moneys
-  {
-    let originX = 235;
-    let originY = 25;
-    push();
-    fill(...colours.ui.background, 150);
-    stroke(...colours.ui.accent);
-    strokeWeight(10);
-    rect(originX, originY, 300, 60);
-    fill(colours.ui.cash);
-    noStroke();
-    textSize(20);
-    textSize(
-      Math.min(30, (textSize() * 100) / textWidth(game.inventory.cash)) * 0.8
-    );
-    textAlign(LEFT, CENTER);
-    image(images.ui.coin, originX - 120, originY - 1, 40, 40);
-    text(game.inventory.cash, originX - 100, originY + 2);
-    textSize(
-      Math.min(30, (textSize() * 100) / textWidth(game.inventory.bloon_gold)) *
-        0.8
-    );
-    textAlign(LEFT, CENTER);
-    image(images.ui.bloon_gold, originX + 2, originY - 1, 32, 40);
-    fill(colours.ui.bloon_gold);
-    text(game.inventory.bloon_gold, originX + 25, originY + 2);
-    pop();
-  }
-  //XP and level
-  {
-    game.level = game.xp; //temporary
-    push();
-    noFill();
-    stroke(...colours.ui.accent);
-    strokeWeight(5);
-    rect(40, 40, 90, 90);
-    fill(colours.ui.xp);
-    stroke(255);
-    textSize(20);
-    textSize(
-      Math.min(50, (textSize() * 100) / textWidth("$" + game.level)) * 0.8
-    );
-    textAlign(CENTER, CENTER);
-    RADImage(images.ui.xp_bg, 40, 40, 90, 90, frameCount / 60);
-    RADImage(images.ui.xp_bg, 40, 40, 90, 90, 0);
-    text(game.level, 40, 40);
-    pop();
-  }
-
-  button(730, 770, 100, 40, "Shop", () => {
-    ui.sidebar = "bloons-shop";
-  });
-
-  button(730, 720, 100, 40, "Bloons", () => {
-    ui.sidebar = "bloons";
-  });
-
-  //draw sidebar
-  drawSidebar();
-
-  pop();
 }
 
 function drawSidebar() {
@@ -1064,4 +1096,26 @@ function drawMonkeyHealthbar(){
   textAlign(CENTER, CENTER)
   text("Round "+(game.round + 1)+" of "+(game.map.lastRound + 1), 400, 747)
   pop()
+}
+
+function bloonDespawnEventTick(){
+  if(timer(10)){
+    if(world.bloons.length > 0){
+      let bloonIndexToRemove = rnd(0, world.bloons.length)
+      let bloon = world.bloons[bloonIndexToRemove]
+      if(bloon){
+        createVisualEffect("despawn", bloon.x, bloon.y, 0)
+        game.xp += rewards.xp.bloons[bloon.typeName] * 2;
+      }
+      world.bloons.splice(bloonIndexToRemove, 1)
+    }
+    else{
+      return true
+    }
+  }
+  return false
+}
+
+function timer(frames){
+  return frameCount % frames === 0
 }
