@@ -1,9 +1,7 @@
-// Modules to control application life and create native browser window
-const { app, BrowserWindow, nativeImage} = require('electron')
+const { app, BrowserWindow, nativeImage, session} = require('electron')
 const path = require('node:path')
 
 function createWindow () {
-  // Create the browser window.
   const mainWindow = new BrowserWindow({
     width: 800,
     height: 840,
@@ -19,17 +17,10 @@ function createWindow () {
     },
     icon: "./bmd.ico"
   })
-
-  // and load the index.html of the app.
   mainWindow.loadFile('index.html')
-
-  // Open the DevTools.
   // mainWindow.webContents.openDevTools()
 }
 
-// This method will be called when Electron has finished
-// initialization and is ready to create browser windows.
-// Some APIs can only be used after this event occurs.
 app.whenReady().then(() => {
   createWindow()
 
@@ -37,6 +28,15 @@ app.whenReady().then(() => {
     // On macOS it's common to re-create a window in the app when the
     // dock icon is clicked and there are no other windows open.
     if (BrowserWindow.getAllWindows().length === 0) createWindow()
+  })
+
+  session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
+    callback({
+      responseHeaders: {
+        ...details.responseHeaders,
+        'Content-Security-Policy': ["default-src 'self'; script-src 'self' cdn.statically.io; style-src 'self' 'unsafe-inline'"]
+      }
+    })
   })
 })
 
@@ -46,3 +46,4 @@ app.whenReady().then(() => {
 app.on('window-all-closed', function () {
   if (process.platform !== 'darwin') app.quit()
 })
+
