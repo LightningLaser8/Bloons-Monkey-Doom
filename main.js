@@ -1,4 +1,4 @@
-const { app, BrowserWindow, nativeImage, session} = require('electron')
+const { app, BrowserWindow, nativeImage, session, ipcMain } = require('electron')
 const path = require('node:path')
 
 function createWindow () {
@@ -19,6 +19,15 @@ function createWindow () {
   })
   mainWindow.loadFile('index.html')
   // mainWindow.webContents.openDevTools()
+  ipcMain.on("command", (event, command) => {
+    switch(command + ""){
+      case "quit":
+        app.quit()
+        break;
+      default:
+        break;
+    }
+  })
 }
 
 app.whenReady().then(() => {
@@ -38,6 +47,7 @@ app.whenReady().then(() => {
       }
     })
   })
+
 })
 
 // Quit when all windows are closed, except on macOS. There, it's common

@@ -84,6 +84,9 @@ const images = {
     bloon_gold: error,
     xp_bg: error,
   },
+  // buttons: {
+  //   play: error
+  // }
 };
 /** Pricing for in-game purchasables */
 const prices = {

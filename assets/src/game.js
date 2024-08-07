@@ -149,6 +149,8 @@ function draw() {
   tickMouse();
   if (game.state === "start-menu") {
     startMenu();
+  } else if (game.state === "main-menu") {
+    mainMenu();
   } else if (game.state === "map-select") {
     mapSelectMenu();
   } else if (game.state === "game") {
@@ -173,7 +175,7 @@ function draw() {
     }
     if (gameEndStarted) {
       if (gameEndDelay <= 0) {
-        changeGameState("start-menu");
+        changeGameState("main-menu");
       } else {
         gameEndDelay--;
       }
@@ -413,7 +415,7 @@ function startMenu() {
   }
   button(400, 700, 200, 80, "Start", () => {
     //x: 340, width: 150
-    changeGameState("map-select");
+    changeGameState("main-menu");
   });
   // button(490, 700, 80, 80, "Map\nSelect", () => {
   //   game.state = "map-select";
@@ -500,11 +502,49 @@ function mapSelectMenu() {
     });
   }
   button(40, 30, 50, 30, "Back", () => {
-    changeGameState("start-menu");
+    changeGameState("main-menu");
   });
 }
 
+function mainMenu() {
+  background(colours.ui.background);
+  fill(0, 100, 200);
+  rect(400, 400, 800, 700);
 
+  push();
+  clip(() => {
+    rect(400, 400, 800, 700);
+  });
+
+  noFill();
+  stroke(0, 155, 255);
+
+  for (let s = 0; s < 20; s++) {
+    arc(
+      400,
+      400,
+      ((700 + s * 10) * (3 + Math.sin(frameCount / 360 + s * 10))) / 4,
+      ((600 + s * 10) * (3 + Math.sin(frameCount / 360 + s * 10))) / 4,
+      Math.PI * Math.sin(frameCount / 60 + s * 10) + (Math.PI * s) / 10,
+      Math.PI * Math.sin(frameCount / 60 + s * 10) +
+        Math.PI * 0.3 * (Math.sin(frameCount / 80) + 1.4 + (Math.PI * s) / 10)
+    );
+  }
+  pop();
+  
+  fill(220, 210, 170);
+  rect(400, 400, 700, 600, 400);
+  fill(0, 200, 30);
+  rect(400, 400, 650, 550, 400);
+
+  button(50, 30, 80, 30, "Close", () => {
+    changeGameState("start-menu");
+    commands.quit()
+  });
+  button(550, 200, 100, 60, "Play", () => {
+    changeGameState("map-select");
+  });
+}
 
 function showTitleAt(x, y) {
   noStroke();
@@ -594,7 +634,7 @@ function button(
 }
 
 /**
- * A button that shows an image instead of text. Identical to a button made with `button`.
+ * A button that shows an image instead of text. Otherwise identical to a button made with `button`.
  */
 function imageButton(
   x = 0,
