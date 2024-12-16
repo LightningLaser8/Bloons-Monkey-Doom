@@ -20,7 +20,7 @@ import { mapRegistry } from "./registries.js";
 */
 
 const grasslands = {
-  displayName: "Grasslands",
+  name: "grasslands",
   difficulty: 0,
   defaultTrack: 0,
   numOfTracks: 1,

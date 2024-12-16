@@ -1,4 +1,4 @@
-import { smouse } from "./game.js";
+import { smouse, game } from "./game.js";
 import * as geo from "./geometry.js";
 import { colours, rewards } from "./universal.js";
 import { bloonRegistry } from "./registry/registries.js";

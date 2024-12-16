@@ -17,7 +17,6 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
-
 class ImageContainer {
   image = null;
   source = "assets/textures/error.png";
@@ -25,7 +24,8 @@ class ImageContainer {
     this.source = source ?? this.source;
   }
   async load() {
-    this.image = await loadImage(this.source, () => {console.log("Loaded image "+this.source+" successfully.")}, () => {console.error("Image "+this.source+" could not be found.")});
+    this.image = await loadImage(this.source, () => {}, () => {console.error("Image "+this.source+" could not be found.")});
+    console.log("Loaded image "+this.source+" successfully.")
     return true;
   }
   get width(){

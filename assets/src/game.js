@@ -10,6 +10,8 @@ import {
   images,
   setupAnimations,
   names,
+  Localisation,
+  modText,
 } from "./universal.js";
 import {
   RADImage,
@@ -18,7 +20,7 @@ import {
   ImageContainer,
   rnd,
   roundNum,
-  modImage
+  modImage,
 } from "./geometry.js";
 import {} from "./graphics.js";
 import { setupIntegrate, loadMods } from "./integrator.js";
@@ -142,6 +144,7 @@ let gameEndDelay = 0,
   gameEndStarted = false;
 
 async function preload() {
+  setWindowTitle("...");
   await noTextureError.load();
   luckiestGuyStatic = await loadFont("assets/font/LuckiestGuy-Regular.ttf");
   //load all second-level images
@@ -155,6 +158,12 @@ async function preload() {
         );
     }
   }
+  //Localisation
+  let lang = localStorage.getItem("lang") ?? "en-gb"
+  setTitleBarExtras("["+lang+"]");
+  await Localisation.setup(lang);
+  setTitleBarExtras();
+  refreshWindowTitle();
 }
 /**@type {HTMLCanvasElement} */
 let cnv;
@@ -165,6 +174,11 @@ function updateSize() {
   cnv.style.scale = vscale;
   cnv.style.translate =
     "-" + (800 - windowWidth) / 2 + "px -" + (800 - space) / 2 + "px";
+}
+
+function updateLanguage(lang) {
+  localStorage.setItem("lang", lang);
+  location.reload();
 }
 
 function resize() {
@@ -191,8 +205,8 @@ function setup() {
     sortedMaps[map.difficulty].push(map);
   });
 
-  setupIntegrate()
-  loadMods()
+  setupIntegrate();
+  loadMods();
 }
 
 /** Makes a bloon on the current map. Optionally takes a parameter for the track index to place the bloon on. */
@@ -455,7 +469,7 @@ function startMenu() {
   for (let part of ani.parts) {
     let partX = part.x + part.deltaX * ani.progress;
     let partY = part.y + part.deltaY * ani.progress;
-    if (part.image instanceof p5.Image) {
+    if (part.image) {
       push();
       if (part.flip) {
         translate(partX, partY);
@@ -483,10 +497,16 @@ function startMenu() {
     noStroke();
     fill(...colours.ui.buttons.contrast);
     textSize(30);
-    text("Map: " + game.map.displayName, 400, 770);
+    text(
+      Localisation.text("ui.menu.map") +
+        ": " +
+        Localisation.text("map." + game.map.name + ".name"),
+      400,
+      770
+    );
     pop();
   }
-  button(400, 700, 200, 80, "Start", () => {
+  button(400, 700, 200, 80, Localisation.text("button.start"), () => {
     //x: 340, width: 150
     changeGameState("main-menu");
   });
@@ -517,7 +537,15 @@ function mapSelectMenu() {
     noStroke();
     fill(...colours.ui.buttons.contrast);
     textSize(50);
-    text(names.map_difficulties[difficulty] + " Maps", 400, 30);
+    text(
+      Localisation.text(
+        "category." + names.map_difficulties[difficulty] + ".name"
+      ) +
+        " " +
+        Localisation.text("ui.menu.maps"),
+      400,
+      30
+    );
     let len = Math.min(6, sortedMaps[difficulty].length);
     for (let mapIndex = 0; mapIndex < len; mapIndex++) {
       let map = sortedMaps[difficulty][mapIndex + 6 * (ui.mapMenuPage - 1)];
@@ -545,8 +573,12 @@ function mapSelectMenu() {
     }
     textSize(20);
     fill(colours.ui.buttons.contrast);
-    text("Difficulty:", 675, 720);
-    text(names.game_difficulties[game.difficulty], 675, 750);
+    text(Localisation.text("difficulty.title") + ":", 675, 720);
+    modText(
+      "difficulty." + names.game_difficulties[game.difficulty] + ".name",
+      675,
+      750
+    );
     if (game.difficulty > 0) {
       button(600, 750, 30, 30, "<", () => {
         game.difficulty--;
@@ -574,7 +606,7 @@ function mapSelectMenu() {
       ui.mapMenuPage--;
     });
   }
-  button(40, 30, 50, 30, "Back", () => {
+  button(40, 30, 50, 30, Localisation.text("button.back"), () => {
     changeGameState("main-menu");
   });
 }
@@ -610,11 +642,11 @@ function mainMenu() {
   fill(0, 200, 30);
   rect(400, 400, 650, 550, 400);
 
-  button(50, 30, 80, 30, "Close", () => {
+  button(50, 30, 80, 30, Localisation.text("button.close"), () => {
     changeGameState("start-menu");
     commands.quit();
   });
-  button(550, 200, 100, 60, "Play", () => {
+  button(550, 200, 100, 60, Localisation.text("button.play"), () => {
     changeGameState("map-select");
   });
 }
@@ -627,28 +659,52 @@ function showTitleAt(x, y) {
   fill(colours.title.monkey.main);
   stroke(colours.title.monkey.outline);
   strokeWeight(7);
-  text("Monkey", x - 90 * txtPosCoefficient, y + 4 + 110 * txtPosCoefficient);
-  text("Monkey", x - 90 * txtPosCoefficient, y + 2 + 110 * txtPosCoefficient);
-  text("Monkey", x - 90 * txtPosCoefficient, y + 110 * txtPosCoefficient);
+  modText(
+    "game.title.monkey",
+    x - 90 * txtPosCoefficient,
+    y + 4 + 110 * txtPosCoefficient
+  );
+  modText(
+    "game.title.monkey",
+    x - 90 * txtPosCoefficient,
+    y + 2 + 110 * txtPosCoefficient
+  );
+  modText(
+    "game.title.monkey",
+    x - 90 * txtPosCoefficient,
+    y + 110 * txtPosCoefficient
+  );
 
   //to 330, 200
   textSize(50 * txtPosCoefficient);
   fill(colours.title.doom.main);
   stroke(colours.title.doom.outline);
   strokeWeight(7);
-  text("Doom", x + 110 * txtPosCoefficient, y + 4 + 110 * txtPosCoefficient);
-  text("Doom", x + 110 * txtPosCoefficient, y + 2 + 110 * txtPosCoefficient);
-  text("Doom", x + 110 * txtPosCoefficient, y + 110 * txtPosCoefficient);
+  modText(
+    "game.title.doom",
+    x + 110 * txtPosCoefficient,
+    y + 4 + 110 * txtPosCoefficient
+  );
+  modText(
+    "game.title.doom",
+    x + 110 * txtPosCoefficient,
+    y + 2 + 110 * txtPosCoefficient
+  );
+  modText(
+    "game.title.doom",
+    x + 110 * txtPosCoefficient,
+    y + 110 * txtPosCoefficient
+  );
 
   //to 490, 200
   textSize(120);
   fill(colours.title.bloons.main);
   stroke(colours.title.bloons.outline);
   strokeWeight(10);
-  text("Bloons", x, y + 34);
-  text("Bloons", x, y + 30);
-  text("Bloons", x, y + 26);
-  text("Bloons", x, y + 22);
+  modText("game.title.bloons", x, y + 34);
+  modText("game.title.bloons", x, y + 30);
+  modText("game.title.bloons", x, y + 26);
+  modText("game.title.bloons", x, y + 22);
 }
 
 /**
@@ -662,7 +718,8 @@ function button(
   height = 30,
   shownText = "",
   onPress = () => {},
-  draw = true
+  draw = true,
+  scaleFrom = null
 ) {
   push();
   if (draw) {
@@ -696,11 +753,11 @@ function button(
   if (draw) {
     rect(x, y, width, height);
     textSize(30); //starting point for checks
-    textSize(((textSize() * width) / textWidth(shownText)) * 0.8);
+    textSize(((textSize() * width) / textWidth(scaleFrom ?? shownText)) * 0.8);
     fill(...colours.ui.buttons.contrast);
     noStroke();
     textAlign(CENTER, CENTER);
-    text(shownText, x, y /*, width, height*/);
+    modText(shownText, x, y /*, width, height*/);
   }
   pop();
   return false;
@@ -769,16 +826,17 @@ function captionedImageButton(
   shownText = "",
   onPress = () => {},
   draw = true,
-  unavailable = false
+  unavailable = false,
+  scaleFrom = null
 ) {
   push();
   imageButton(x, y, width, height, shownImage, onPress, draw, unavailable);
   textSize(30); //starting point for checks
-  textSize(((textSize() * width) / textWidth(shownText)) * 0.8);
+  textSize(((textSize() * width) / textWidth(scaleFrom ?? shownText)) * 0.8);
   fill(...colours.ui.buttons.contrast);
   noStroke();
   textAlign(CENTER, CENTER);
-  text(shownText, x, y + textSize() * 1 + height / 2 /*, width, height*/);
+  modText(shownText, x, y + textSize() * 1 + height / 2 /*, width, height*/);
   pop();
 }
 
@@ -790,31 +848,35 @@ function mapButton(x, y, map) {
     200,
     200,
     images.maps[map.background],
-    map.displayName,
+    "map." + map.name + ".name",
     () => {
       game.map = map;
       loadCurrentRoundFrom(game.map);
       changeGameState("game");
-      setTitleBarExtras(": " + map.displayName);
+      setTitleBarExtras(": " + Localisation.text("map." + map.name + ".name"));
       refreshWindowTitle();
     },
     true,
-    !map.difficulties[game.difficulty]
+    !map.difficulties[game.difficulty],
+    map.name
   );
   let off = 45;
   textSize(15);
   let extraInfo;
   if (map.difficulties[game.difficulty]) {
     extraInfo =
-      "Rounds: " +
+      Localisation.text("map.info.rounds") +
+      ": " +
       (map.difficulties[game.difficulty].lastRound + 1) +
-      " | Reward: " +
+      " | " +
+      Localisation.text("map.info.reward") +
+      ": " +
       map.difficulties[game.difficulty].reward +
       "   ";
   } else {
-    extraInfo = "Map unavailable";
+    extraInfo = Localisation.text("map.info.unavailable");
   }
-  text(extraInfo, x, y + off + 103);
+  modText(extraInfo, x, y + off + 103);
   if (map.difficulties[game.difficulty])
     modImage(
       images.ui.bloon_gold,
@@ -837,11 +899,11 @@ function drawInGameUI() {
   //XP and level
   drawXP();
 
-  button(730, 770, 100, 40, "Shop", () => {
+  button(730, 770, 100, 40, "ui.shop.title", () => {
     ui.sidebar = "bloons-shop";
   });
 
-  button(730, 720, 100, 40, "Bloons", () => {
+  button(730, 720, 100, 40, "ui.bloons.title", () => {
     ui.sidebar = "bloons";
   });
 
@@ -869,7 +931,7 @@ function drawXP() {
   textAlign(CENTER, CENTER);
   RADImage(images.ui.xp_bg, 40, 40, 90, 90, frameCount / 60);
   RADImage(images.ui.xp_bg, 40, 40, 90, 90, 0);
-  text(game.level, 40, 40);
+  modText(game.level, 40, 40);
   pop();
 }
 
@@ -889,7 +951,7 @@ function drawMoneyCounter() {
   );
   textAlign(LEFT, CENTER);
   modImage(images.ui.coin, originX - 120, originY - 1, 40, 40);
-  text(game.inventory.cash, originX - 100, originY + 2);
+  modText(game.inventory.cash, originX - 100, originY + 2);
   textSize(
     Math.min(30, (textSize() * 100) / textWidth(game.inventory.bloon_gold)) *
       0.8
@@ -897,7 +959,7 @@ function drawMoneyCounter() {
   textAlign(LEFT, CENTER);
   modImage(images.ui.bloon_gold, originX + 2, originY - 1, 32, 40);
   fill(colours.ui.bloon_gold);
-  text(game.inventory.bloon_gold, originX + 25, originY + 2);
+  modText(game.inventory.bloon_gold, originX + 25, originY + 2);
   pop();
 }
 
@@ -918,7 +980,11 @@ function drawExtraInfo() {
       ui.currentFPS = avg;
     }
     textSize(15);
-    text(roundNum(ui.currentFPS, 0) + " FPS", 5, 112);
+    text(
+      roundNum(ui.currentFPS, 0) + " " + Localisation.text("util.fps.title"),
+      5,
+      112
+    );
     pop();
   }
   //Mouse position
@@ -928,8 +994,12 @@ function drawExtraInfo() {
     fill(255);
     noStroke();
     textSize(15);
-    text(
-      "Mouse pos: " + roundNum(smouse.x, 0) + ", " + roundNum(smouse.y, 0),
+    modText(
+      Localisation.text("util.mouse-pos.title") +
+        ": " +
+        roundNum(smouse.x, 0) +
+        ", " +
+        roundNum(smouse.y, 0),
       5,
       132
     );
@@ -955,7 +1025,7 @@ function drawSidebar() {
     strokeWeight(5);
     fill(0);
     textSize(30);
-    text("Bloons", 725, 36);
+    modText("ui.bloons.title", 725, 36);
 
     bloonSendButton(
       700,
@@ -975,18 +1045,27 @@ function drawSidebar() {
       Math.min(
         30,
         ((textSize() * 100) /
-          textWidth(ui.orderedBloonTypes[ui.selectedBloonType])) *
+          textWidth(
+            Localisation.text(
+              "bloon." + ui.orderedBloonTypes[ui.selectedBloonType] + ".name"
+            )
+          )) *
           0.8
       )
     );
-    text(ui.orderedBloonTypes[ui.selectedBloonType], 700, 140, 100);
+    modText(
+      "bloon." + ui.orderedBloonTypes[ui.selectedBloonType] + ".name",
+      700,
+      140,
+      100
+    );
   }
   if (ui.sidebar === "bloons-shop") {
     stroke(255);
     strokeWeight(5);
     fill(0);
     textSize(30);
-    text("Shop", 725, 36);
+    modText("ui.shop.title", 725, 36);
 
     //Buy button
     bloonBuyButton(
@@ -1007,11 +1086,20 @@ function drawSidebar() {
       Math.min(
         30,
         ((textSize() * 100) /
-          textWidth(ui.orderedBloonTypes[ui.selectedBloonType])) *
+          textWidth(
+            Localisation.text(
+              "bloon." + ui.orderedBloonTypes[ui.selectedBloonType] + ".name"
+            )
+          )) *
           0.8
       )
     );
-    text(ui.orderedBloonTypes[ui.selectedBloonType], 700, 140, 100);
+    modText(
+      "bloon." + ui.orderedBloonTypes[ui.selectedBloonType] + ".name",
+      700,
+      140,
+      100
+    );
   }
   pop();
 }
@@ -1239,16 +1327,25 @@ function loadCurrentRoundFrom(map) {
 }
 
 function setTitleBarExtras(text) {
-  document.getElementById("title-extras").innerText = "" + text;
+  document.getElementById("title-extras").innerText = "" + (text ?? "");
+  document.getElementById("title-name").innerText =
+    Localisation.text("game.title");
 }
 
 function refreshWindowTitle() {
+  if (!Localisation.loaded) return;
   document.querySelector("title").innerText =
     game.state === "game"
-      ? game.map?.displayName
-        ? game.map.displayName + " - "
+      ? game.map?.name
+        ? Localisation.text("map." + game.map.name + ".name") +
+          " - " +
+          Localisation.text("game.title")
         : ""
-      : "" + "Bloons Monkey Doom";
+      : Localisation.text("game.title");
+}
+
+function setWindowTitle(txt) {
+  document.querySelector("title").innerText = txt;
 }
 
 function createVisualEffect(effectName, x, y, direction) {
@@ -1279,7 +1376,8 @@ function drawMonkeyHealthbar() {
   fill(255);
   strokeWeight(2);
   text(
-    "Lives: " +
+    Localisation.text("ui.bar.lives") +
+      ": " +
       game.lives +
       " / " +
       game.map.difficulties[game.difficulty].rounds[game.round].lives,
@@ -1289,9 +1387,12 @@ function drawMonkeyHealthbar() {
   textSize(20);
   textAlign(CENTER, CENTER);
   text(
-    "Round " +
+    Localisation.text("ui.bar.round") +
+      " " +
       (game.round + 1) +
-      " of " +
+      " " +
+      Localisation.text("ui.bar.of") +
+      " " +
       (game.map.difficulties[game.difficulty].lastRound + 1),
     400,
     747
@@ -1322,15 +1423,9 @@ function timer(frames) {
 
 function changeGameState(state) {
   game.state = state;
-  if (state !== game)
-    setTitleBarExtras(
-      title.extras[state] ??
-        ": " +
-          state
-            .split("-")
-            .map((x) => x.charAt(0).toUpperCase() + x.slice(1))
-            .join(" ")
-    );
+  if (state !== "start-menu")
+    setTitleBarExtras(": " + Localisation.text("state." + state + ".name"));
+  else setTitleBarExtras("");
   refreshWindowTitle();
 }
 

@@ -83,28 +83,28 @@ let error = {};
 const images = {
   bloons: {
     red: new ImageContainer("assets/textures/bloons/red.png"),
-    blue: error,
-    green: error,
-    yellow: error,
-    pink: error,
-    black: error,
-    white: error,
-    purple: error,
-    zebra: error,
-    lead: error,
-    rainbow: error,
-    ceramic: error,
+    blue: new ImageContainer("assets/textures/bloons/blue.png"),
+    green: new ImageContainer("assets/textures/bloons/green.png"),
+    yellow: new ImageContainer("assets/textures/bloons/yellow.png"),
+    pink: new ImageContainer("assets/textures/bloons/pink.png"),
+    black: new ImageContainer("assets/textures/bloons/black.png"),
+    white: new ImageContainer("assets/textures/bloons/white.png"),
+    purple: new ImageContainer("assets/textures/bloons/purple.png"),
+    zebra: new ImageContainer("assets/textures/bloons/zebra.png"),
+    lead: new ImageContainer("assets/textures/bloons/lead.png"),
+    rainbow: new ImageContainer("assets/textures/bloons/rainbow.png"),
+    ceramic: new ImageContainer("assets/textures/bloons/ceramic.png"),
   },
   art: {
-    moab: error,
+    moab: new ImageContainer("assets/textures/art/moab.png"),
   },
   maps: {
-    map1: error,
+    map1: new ImageContainer("assets/textures/maps/map1.png"),
   },
   ui: {
-    coin: error,
-    bloon_gold: error,
-    xp_bg: error,
+    coin: new ImageContainer("assets/textures/ui/coin.png"),
+    bloon_gold: new ImageContainer("assets/textures/ui/bloon_gold.png"),
+    xp_bg: new ImageContainer("assets/textures/ui/xp_bg.png"),
   },
   // buttons: {
   //   play: error
@@ -160,13 +160,56 @@ const rewards = {
   },
 };
 
+class Localisation {
+  static directory = {};
+  static loaded = false;
+  constructor() {
+    throw new TypeError("Cannot instantiate Localisation");
+  }
+  static text(name) {
+    name = name.toString().toLowerCase().trim();
+    return ""+(this.directory[name] ?? name ?? this.directory["error.null-text"] ?? "error.null-text");
+  }
+  static async setup(language = "en-gb") {
+    this.directory = {};
+    this.loaded = false;
+    const file = await import("../localisation/" + language + ".json", {
+      with: { type: "json" },
+    });
+    if (!file) {
+      throw new Error("Localisation file not found!");
+    }
+    let obj = file.default;
+    if (!obj) {
+      throw new Error("Localisation file empty!");
+    }
+    if (Array.isArray(obj)) {
+      throw new Error("Invalid localisation file!");
+    }
+    for (let item of Object.keys(obj)) {
+      if (typeof obj[item] !== "string") {
+        throw new Error(
+          "Invalid localisation entry: '" + item + ": " + obj[item] + "'"
+        );
+      }
+      this.directory[item] = obj[item];
+    }
+    console.log("Game language is "+language+".")
+    this.loaded = true;
+  }
+}
+
+function modText(txt, txt_x, txt_y, txt_maxwidth) {
+  text(Localisation.text(txt), txt_x, txt_y, txt_maxwidth);
+}
+
 const names = {
   map_difficulties: [
-    "Beginner",
-    "Intermediate",
-    "Advanced",
-    "Expert",
-    "Master",
+    "beginner",
+    "intermediate",
+    "advanced",
+    "expert",
+    "master",
   ],
   game_difficulties: ["Easy", "Medium", "Hard", "Impossible"],
 };
@@ -175,34 +218,10 @@ const title = {
   /** Localised names for the title bar extras. */
   extras: {
     "start-menu": "",
-    "map-select": ": Map Selector",
-    game: ": In Game",
+    "map-select": ": " + Localisation.text("state.map-selector.name"),
+    game: ": " + Localisation.text("state.in-game.name"),
   },
 };
-
-class Localisation {
-  static directory = {};
-  constructor() {
-    throw new TypeError("Cannot instantiate Localisation");
-  }
-  static text(name) {
-    return this.directory[name] ?? name;
-  }
-  static async setup(type = "generic") {
-    const file = await import("../localisation/" + type + ".json", {
-      with: { type: "text/json" },
-    })?.default;
-    if (Array.isArray(file)) {
-      throw new Error("Invalid localisation file!");
-    }
-    for (let item of Object.keys(file)) {
-      if (typeof file[item] !== "string") {
-        throw new Error("Invalid localisation entry: " + file[item]);
-      }
-      this.directory[item] = file[item];
-    }
-  }
-}
 
 function setupAnimations() {
   ui.anims = {
@@ -315,4 +334,5 @@ export {
   names,
   title,
   Localisation,
+  modText,
 };

@@ -38,7 +38,7 @@ function createWindow () {
     icon: "./bmd.ico"
   })
   mainWindow.loadFile('index.html')
-  mainWindow.webContents.openDevTools()
+  //mainWindow.webContents.openDevTools()
   ipcMain.on("command", (event, command) => {
     switch(command + ""){
       case "quit":
