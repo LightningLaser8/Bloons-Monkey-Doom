@@ -1,3 +1,27 @@
+import { mapRegistry } from "./registry/maps.js";
+import { towerRegistry } from "./registry/towers.js";
+import { bloonRegistry } from "./registry/bloons.js";
+import { effectRegistry } from "./registry/vfx.js";
+import {
+  title,
+  colours,
+  rewards,
+  prices,
+  images,
+  setupAnimations,
+  names,
+} from "./universal.js";
+import {
+  RADImage,
+  RADShape,
+  noTextureError,
+  ImageContainer,
+  rnd,
+  roundNum,
+  modImage
+} from "./geometry.js";
+import {} from "./graphics.js";
+import { setupIntegrate, loadMods } from "./integrator.js";
 /*
     Bloons Monkey Doom: Reverse Bloons Tower Defense
     Copyright (C) 2024 LightningLaser8
@@ -89,6 +113,15 @@ let mouse = {
   x: 0,
   y: 0,
 };
+/** Represents the current on-screen mouse. */
+let smouse = {
+  get x() {
+    return mouseX / vscale;
+  },
+  get y() {
+    return mouseY / vscale;
+  },
+};
 /**Represents the current in-world camera.*/
 let camera = {
   x: 0,
@@ -108,22 +141,39 @@ let luckiestGuyStatic;
 let gameEndDelay = 0,
   gameEndStarted = false;
 
-function preload() {
-  noTextureError = loadImage("assets/textures/error.png");
-  error = noTextureError;
-  luckiestGuyStatic = loadFont("assets/font/LuckiestGuy-Regular.ttf");
+async function preload() {
+  await noTextureError.load();
+  luckiestGuyStatic = await loadFont("assets/font/LuckiestGuy-Regular.ttf");
   //load all second-level images
   for (let type in images) {
     for (let instance in images[type]) {
-      images[type][instance] = loadImage(
-        "assets/textures/" + type + "/" + instance + ".png"
-      );
+      if (images[type][instance] instanceof ImageContainer)
+        await images[type][instance].load();
+      else
+        images[type][instance] = await loadImage(
+          "assets/textures/" + type + "/" + instance + ".png"
+        );
     }
   }
 }
+/**@type {HTMLCanvasElement} */
+let cnv;
+let vscale = 1;
+function updateSize() {
+  let space = windowWidth < windowHeight ? windowWidth : windowHeight - 40;
+  vscale = space / 800;
+  cnv.style.scale = vscale;
+  cnv.style.translate =
+    "-" + (800 - windowWidth) / 2 + "px -" + (800 - space) / 2 + "px";
+}
+
+function resize() {
+  updateSize();
+}
 
 function setup() {
-  createCanvas(800, 800);
+  cnv = createCanvas(800, 800).elt;
+  updateSize();
   particleLayer = createGraphics(800, 800);
   lightingLayer = createGraphics(800, 800);
   rectMode(CENTER);
@@ -140,6 +190,9 @@ function setup() {
   mapRegistry.forEach((map) => {
     sortedMaps[map.difficulty].push(map);
   });
+
+  setupIntegrate()
+  loadMods()
 }
 
 /** Makes a bloon on the current map. Optionally takes a parameter for the track index to place the bloon on. */
@@ -165,7 +218,7 @@ function mousePressed() {}
 function keyPressed() {}
 
 function draw() {
-  clear();
+  background(0);
   tickMouse();
   if (game.state === "start-menu") {
     startMenu();
@@ -174,12 +227,12 @@ function draw() {
   } else if (game.state === "map-select") {
     mapSelectMenu();
   } else if (game.state === "game") {
-    image(images.maps[game.map.background], 400, 400, 800, 800);
+    modImage(images.maps[game.map.background], 400, 400, 800, 800);
     gameLoop();
     drawOffsetGame();
     drawInGameUI();
   } else if (game.state === "winning-sequence") {
-    image(images.maps[game.map.background], 400, 400, 800, 800);
+    modImage(images.maps[game.map.background], 400, 400, 800, 800);
     tickParticles();
     drawOffsetGame();
     drawExtraInfo();
@@ -237,8 +290,8 @@ function renderGameAt(x, y, gameScale, maxX, maxY) {
 function resetCamera() {
   camera.x = -400;
   camera.y = -400;
-  mouse.x = mouseX + camera.x;
-  mouse.y = mouseY + camera.y;
+  mouse.x = smouse.x + camera.x;
+  mouse.y = smouse.y + camera.y;
 }
 
 function drawOffsetGame(offsetX = 0, offsetY = 0) {
@@ -246,8 +299,8 @@ function drawOffsetGame(offsetX = 0, offsetY = 0) {
   camera.x = offsetX;
   camera.y = offsetY;
   translate(-camera.x, -camera.y);
-  mouse.x = mouseX + camera.x;
-  mouse.y = mouseY + camera.y;
+  mouse.x = smouse.x + camera.x;
+  mouse.y = smouse.y + camera.y;
   push();
   calculateScreenShake();
   translate(world.screenOffsetX, world.screenOffsetY);
@@ -315,7 +368,7 @@ function drawParticles() {
   for (let p of world.particles) {
     p.show(particleLayer);
   }
-  image(particleLayer, 400, 400, 800, 800);
+  modImage(particleLayer, 400, 400, 800, 800);
   pop();
 }
 
@@ -551,7 +604,7 @@ function mainMenu() {
     );
   }
   pop();
-  
+
   fill(220, 210, 170);
   rect(400, 400, 700, 600, 400);
   fill(0, 200, 30);
@@ -559,7 +612,7 @@ function mainMenu() {
 
   button(50, 30, 80, 30, "Close", () => {
     changeGameState("start-menu");
-    commands.quit()
+    commands.quit();
   });
   button(550, 200, 100, 60, "Play", () => {
     changeGameState("map-select");
@@ -618,10 +671,10 @@ function button(
     strokeWeight(5);
   }
   let hovered =
-    mouseX > x - width / 2 &&
-    mouseX < x + width / 2 &&
-    mouseY < y + height / 2 &&
-    mouseY > y - height / 2;
+    smouse.x > x - width / 2 &&
+    smouse.x < x + width / 2 &&
+    smouse.y < y + height / 2 &&
+    smouse.y > y - height / 2;
   if (hovered) {
     if (draw) {
       noFill();
@@ -673,10 +726,10 @@ function imageButton(
     strokeWeight(5);
   }
   let hovered =
-    mouseX > x - width / 2 &&
-    mouseX < x + width / 2 &&
-    mouseY < y + height / 2 &&
-    mouseY > y - height / 2;
+    smouse.x > x - width / 2 &&
+    smouse.x < x + width / 2 &&
+    smouse.y < y + height / 2 &&
+    smouse.y > y - height / 2;
   if (hovered) {
     if (draw) {
       noFill();
@@ -701,7 +754,7 @@ function imageButton(
 
   if (draw) {
     rect(x, y, width, height);
-    image(shownImage, x, y, width - 10, height - 10);
+    modImage(shownImage, x, y, width - 10, height - 10);
   }
   pop();
   return false;
@@ -763,7 +816,7 @@ function mapButton(x, y, map) {
   }
   text(extraInfo, x, y + off + 103);
   if (map.difficulties[game.difficulty])
-    image(
+    modImage(
       images.ui.bloon_gold,
       x + textWidth(extraInfo) / 2,
       y + off + 103,
@@ -835,14 +888,14 @@ function drawMoneyCounter() {
     Math.min(30, (textSize() * 100) / textWidth(game.inventory.cash)) * 0.8
   );
   textAlign(LEFT, CENTER);
-  image(images.ui.coin, originX - 120, originY - 1, 40, 40);
+  modImage(images.ui.coin, originX - 120, originY - 1, 40, 40);
   text(game.inventory.cash, originX - 100, originY + 2);
   textSize(
     Math.min(30, (textSize() * 100) / textWidth(game.inventory.bloon_gold)) *
       0.8
   );
   textAlign(LEFT, CENTER);
-  image(images.ui.bloon_gold, originX + 2, originY - 1, 32, 40);
+  modImage(images.ui.bloon_gold, originX + 2, originY - 1, 32, 40);
   fill(colours.ui.bloon_gold);
   text(game.inventory.bloon_gold, originX + 25, originY + 2);
   pop();
@@ -876,7 +929,7 @@ function drawExtraInfo() {
     noStroke();
     textSize(15);
     text(
-      "Mouse pos: " + roundNum(mouseX, 0) + ", " + roundNum(mouseY, 0),
+      "Mouse pos: " + roundNum(smouse.x, 0) + ", " + roundNum(smouse.y, 0),
       5,
       132
     );
@@ -969,7 +1022,7 @@ function bloonSendButton(x, y, bloon) {
     console.error("Image not found for bloon " + bloon);
     img = noTextureError;
   }
-  image(img, x - 70, y, img.width / 2, img.height / 2);
+  modImage(img, x - 70, y, img.width / 2, img.height / 2);
   if (game.inventory.bloons[bloon + "s"] == null) {
     console.error("There is no slot in your inventory for " + bloon + "s");
     return;
@@ -1001,7 +1054,7 @@ function bloonBuyButton(x, y, bloon, price) {
     console.error("Image not found for bloon '" + bloon + "'");
     img = noTextureError;
   }
-  image(img, x - 70, y, img.width / 2, img.height / 2);
+  modImage(img, x - 70, y, img.width / 2, img.height / 2);
   if (game.inventory.bloons[bloon + "s"] == null) {
     console.error("There is no slot in your inventory for '" + bloon + "'s");
     return;
@@ -1280,3 +1333,6 @@ function changeGameState(state) {
     );
   refreshWindowTitle();
 }
+
+export { ui, game, mouse, camera, smouse };
+export { draw, setup, preload, resize };

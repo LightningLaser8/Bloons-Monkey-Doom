@@ -2,7 +2,7 @@
 <html>
   <!--
     Bloons Monkey Doom: Reverse Bloons Tower Defense
-    Copyright (C) 2024 LightningLaser8
+    Copyright © 2024 LightningLaser8
 
     This file is a part of Bloons Monkey Doom.
 
@@ -34,10 +34,11 @@
     Chromium version <span id="chrome-version"></span>,
     Electron version <span id="electron-version"></span>.
   </div>
-  <span style="color: white; font-family: 'Courier New', Courier, monospace; text-align: left; position: absolute; translate: -380px 10px; overflow: visible; word-wrap: none;"> Bloons Monkey Doom<span id="title-extras"></span></span><br>
+  <span style="color: white; font-family: 'Courier New', Courier, monospace; text-align: left; position: absolute; float: left; overflow: visible; word-wrap: none;" id="title"> Bloons Monkey Doom<span id="title-extras"></span></span><br>
   <br>
-  <div>
+  <div id="stuff">
     <script src="lib/p5.min.js"></script>
+    <!-- <script type="module" src="assets/src/integrator.js"></script>
   
     <script src="assets/src/universal.js"></script>
     <script src="assets/src/registry/registries.js"></script>
@@ -47,8 +48,8 @@
     <script src="assets/src/geometry.js"></script>
     <script src="assets/src/classes.js"></script>
     <script src="assets/src/registry/bloons.js"></script>
-    <script src="assets/src/registry/towers.js"></script>
-    <script src="assets/src/game.js"></script>
+    <script src="assets/src/registry/towers.js"></script> -->
+    <script type="module" src="assets/src/game.js" defer></script>
   </div>
   
 </body>

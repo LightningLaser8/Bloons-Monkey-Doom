@@ -1,3 +1,6 @@
+import { towerRegistry } from "./registries.js";
+import { Tower, Bullet, PointBullet } from "../classes.js";
+import * as Geo from "../geometry.js"
 /*
     Bloons Monkey Doom: Reverse Bloons Tower Defense
     Copyright (C) 2024 LightningLaser8
@@ -26,7 +29,7 @@ towerRegistry.add(
         type: Bullet,
         damage: 1,
         size: 10,
-        drawer: new DrawShape("rect", [255, 0, 0], [255, 0, 0], 0, 4, 6),
+        drawer: new Geo.DrawShape("rect", [255, 0, 0], [255, 0, 0], 0, 4, 6),
         speed: 15,
         lifetime: 7,
         trailColour: [255, 0, 0],
@@ -36,7 +39,7 @@ towerRegistry.add(
         world,
         x,
         y,
-        new DrawShape("rect", [255, 0, 0], [0, 0, 0], 3, 10, 20),
+        new Geo.DrawShape("rect", [255, 0, 0], [0, 0, 0], 3, 10, 20),
         bulletToAdd,
         30,
         100,
@@ -54,7 +57,7 @@ towerRegistry.add(
         type: PointBullet,
         damage: 2,
         size: 10,
-        drawer: new DrawShape("rect", [255, 0, 0], [255, 0, 0], 0, 4, 6),
+        drawer: new Geo.DrawShape("rect", [255, 0, 0], [255, 0, 0], 0, 4, 6),
         hitEffect: "sniper_hit",
         shootEffect: "sniper_fire",
       };
@@ -62,7 +65,7 @@ towerRegistry.add(
         world,
         x,
         y,
-        new DrawShape("rect", [255, 0, 0], [0, 0, 0], 3, 10, 20),
+        new Geo.DrawShape("rect", [255, 0, 0], [0, 0, 0], 3, 10, 20),
         bulletToAdd,
         90,
         20,
@@ -82,7 +85,7 @@ towerRegistry.add(
         type: PointBullet,
         damage: 4,
         size: 10,
-        drawer: new DrawShape("rect", [255, 0, 0], [255, 0, 0], 0, 4, 6),
+        drawer: new Geo.DrawShape("rect", [255, 0, 0], [255, 0, 0], 0, 4, 6),
         hitEffect: "sniper_hit",
         shootEffect: "sniper_fire",
       };
@@ -90,7 +93,7 @@ towerRegistry.add(
         world,
         x,
         y,
-        new DrawShape("rect", [255, 0, 0], [0, 0, 0], 3, 10, 20),
+        new Geo.DrawShape("rect", [255, 0, 0], [0, 0, 0], 3, 10, 20),
         bulletToAdd,
         90,
         20,
@@ -110,7 +113,7 @@ towerRegistry.add(
         type: PointBullet,
         damage: 7,
         size: 10,
-        drawer: new DrawShape("rect", [255, 0, 0], [255, 0, 0], 0, 4, 6),
+        drawer: new Geo.DrawShape("rect", [255, 0, 0], [255, 0, 0], 0, 4, 6),
         hitEffect: "sniper_hit",
         shootEffect: "sniper_fire",
       };
@@ -118,7 +121,7 @@ towerRegistry.add(
         world,
         x,
         y,
-        new DrawShape("rect", [255, 0, 0], [0, 0, 0], 3, 10, 20),
+        new Geo.DrawShape("rect", [255, 0, 0], [0, 0, 0], 3, 10, 20),
         bulletToAdd,
         90,
         20,
@@ -130,3 +133,4 @@ towerRegistry.add(
     }
   }
 );
+export { towerRegistry };

@@ -1,3 +1,6 @@
+import { statusRegistry } from "./registries.js";
+import { WaveParticle, ShapeParticle } from "../classes.js";
+import { rnd } from "../geometry.js";
 /*
     Bloons Monkey Doom: Reverse Bloons Tower Defense
     Copyright (C) 2024 LightningLaser8
@@ -65,4 +68,4 @@ statusRegistry.add("cold", {
     );
   }
 })
-  
+export { statusRegistry }

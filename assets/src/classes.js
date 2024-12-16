@@ -1,3 +1,9 @@
+import { smouse } from "./game.js";
+import * as geo from "./geometry.js";
+import { colours, rewards } from "./universal.js";
+import { bloonRegistry } from "./registry/registries.js";
+const baseSpeed = 1.2;
+export { baseSpeed };
 /*
     Bloons Monkey Doom: Reverse Bloons Tower Defense
     Copyright (C) 2024 LightningLaser8
@@ -18,7 +24,7 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-const errorDrawer = new DrawImage(noTextureError, 20, 20);
+const errorDrawer = new geo.DrawImage(geo.noTextureError, 20, 20);
 
 class ScreenShakeInstance {
   constructor(x, y, intensity, duration) {
@@ -56,8 +62,8 @@ class DrawerParticle {
   step(dt) {
     if (this.lifetime >= dt) {
       this.moveTo(
-        this.x + this.speed * angleToVector(this.direction).x * dt,
-        this.y + this.speed * angleToVector(this.direction).y * dt
+        this.x + this.speed * geo.angleToVector(this.direction).x * dt,
+        this.y + this.speed * geo.angleToVector(this.direction).y * dt
       );
       this.lifetime -= dt;
       if (this.speed >= this.decel) {
@@ -124,7 +130,7 @@ class WaveParticle {
     context.push();
     context.noFill();
     context.stroke(
-      blendColours(this.colourFrom, this.colourTo, this.calcLifeFract())
+      geo.blendColours(this.colourFrom, this.colourTo, this.calcLifeFract())
     );
     context.strokeWeight(
       this.strokeFrom * this.calcLifeFract() +
@@ -182,8 +188,8 @@ class ShapeParticle {
         this.sizeYFrom * this.calcLifeFract() +
         this.sizeYTo * (1 - this.calcLifeFract());
       this.moveTo(
-        this.x + this.speed * angleToVector(this.direction).x * dt,
-        this.y + this.speed * angleToVector(this.direction).y * dt
+        this.x + this.speed * geo.angleToVector(this.direction).x * dt,
+        this.y + this.speed * geo.angleToVector(this.direction).y * dt
       );
       this.lifetime -= dt;
       if (this.speed >= this.decel) {
@@ -211,9 +217,9 @@ class ShapeParticle {
     context.noStroke();
     context.fill(255);
     context.fill(
-      blendColours(this.colourFrom, this.colourTo, this.calcLifeFract())
+      geo.blendColours(this.colourFrom, this.colourTo, this.calcLifeFract())
     );
-    RADShape(
+    geo.RADShape(
       this.shape,
       this.x,
       this.y,
@@ -310,7 +316,7 @@ class Bullet {
   }
   init() {
     this.direction =
-      this.direction + radians(rndScl(-this.inaccuracy, this.inaccuracy, 5));
+      this.direction + radians(geo.rndScl(-this.inaccuracy, this.inaccuracy, 5));
     this.maxLife = this.lifetime;
     this.onCreate();
   }
@@ -327,8 +333,8 @@ class Bullet {
   }
   move(dt) {
     this.moveTo(
-      this.x + dt * angleToVector(this.direction).x,
-      this.y + dt * angleToVector(this.direction).y
+      this.x + dt * geo.angleToVector(this.direction).x,
+      this.y + dt * geo.angleToVector(this.direction).y
     );
   }
   step(dt, world) {
@@ -344,8 +350,8 @@ class Bullet {
             ) {
               this.attributableEntity.world.particles.push(
                 new ShapeParticle(
-                  this.x - e * angleToVector(this.direction).x,
-                  this.y - e * angleToVector(this.direction).y,
+                  this.x - e * geo.angleToVector(this.direction).x,
+                  this.y - e * geo.angleToVector(this.direction).y,
                   this.direction,
                   this.maxLife * 1.2,
                   0,
@@ -377,13 +383,13 @@ class Bullet {
         this.direction,
         999,
         10,
-        new DrawImage(sparkTexture, 6, 10),
+        new geo.DrawImage(sparkTexture, 6, 10),
         0.2
       );
       p.step(1, particleArray);
-      p.speed = rnd(5, 8);
-      p.lifetime = rnd(7, 11);
-      p.direction += radians(rnd(-15, 15));
+      p.speed = geo.rnd(5, 8);
+      p.lifetime = geo.rnd(7, 11);
+      p.direction += radians(geo.rnd(-15, 15));
       p.direction += radians(180);
       particleArray.push(p);
     }
@@ -408,8 +414,8 @@ class Bullet {
       }
       if (this.trackingType == "instant") {
         if (selected != null) {
-          let here = new Vector(this.x, this.y);
-          let pos = new Vector(selected.x, selected.y);
+          let here = new geo.Vector(this.x, this.y);
+          let pos = new geo.Vector(selected.x, selected.y);
           let targetRotation = pos.subtract(here).getAngle() + HALF_PI;
           this.direction = targetRotation;
         }
@@ -424,7 +430,7 @@ class Bullet {
       b.x = this.x;
       b.y = this.y;
       b.direction = this.direction;
-      b.inaccuracy += rnd(lower, upper);
+      b.inaccuracy += geo.rnd(lower, upper);
       b.attributableEntity = this.attributableEntity;
       b.init();
       b.step(2);
@@ -446,7 +452,7 @@ class Bullet {
           b.x = this.x;
           b.y = this.y;
           b.direction = this.direction + radians(this.intervalAngle + angle);
-          b.inaccuracy += rnd(lower, upper);
+          b.inaccuracy += geo.rnd(lower, upper);
           b.attributableEntity = this.attributableEntity;
           b.init();
           b.move(this.intervalOffset);
@@ -488,7 +494,7 @@ class Bullet {
     }
   }
   getPos() {
-    return new Vector(this.x, this.y);
+    return new geo.Vector(this.x, this.y);
   }
   laserCollide(obj) {
     return false;
@@ -522,18 +528,18 @@ class SkyBullet extends Bullet {
     this.targetY = this.y;
     this.targetX = this.x;
     this.y -= 600;
-    this.x += rnd(-this.xInaccuracy, this.xInaccuracy);
+    this.x += geo.rnd(-this.xInaccuracy, this.xInaccuracy);
     super.init();
 
-    let targetVector = new Vector(this.targetX, this.targetY);
-    let hereVector = new Vector(this.x, this.y);
+    let targetVector = new geo.Vector(this.targetX, this.targetY);
+    let hereVector = new geo.Vector(this.x, this.y);
     this.direction = targetVector.subtract(hereVector).getAngle() + HALF_PI;
     this.#maxDistance = targetVector.distanceTo(hereVector);
     this.#currentDistance = this.#maxDistance;
   }
   step(dt) {
-    let targetVector = new Vector(this.targetX, this.targetY);
-    let hereVector = new Vector(this.x, this.y);
+    let targetVector = new geo.Vector(this.targetX, this.targetY);
+    let hereVector = new geo.Vector(this.x, this.y);
     this.direction = targetVector.subtract(hereVector).getAngle() + HALF_PI;
     this.#currentDistance = targetVector.distanceTo(hereVector);
     let fraction = this.#currentDistance / this.#maxDistance;
@@ -571,17 +577,17 @@ class LaserBullet extends Bullet {
   }
   init() {
     this.direction =
-      this.direction + radians(rnd(-this.inaccuracy, this.inaccuracy));
+      this.direction + radians(geo.rnd(-this.inaccuracy, this.inaccuracy));
     this.maxLife = this.lifetime;
     this.originalDamage = this.damage;
     this.currentSize = this.size;
   }
   laserCollide(obj) {
-    let vct = new Vector(
+    let vct = new geo.Vector(
       Math.cos(this.direction - HALF_PI),
       Math.sin(this.direction - HALF_PI)
     );
-    let here = new Vector(this.x, this.y);
+    let here = new geo.Vector(this.x, this.y);
     for (let i = 0; i < this.currentLength; i++) {
       let check = here.add(vct.getScaledVector(i));
       if (check.distanceTo(obj.getPos()) <= this.size + obj.size) {
@@ -592,7 +598,7 @@ class LaserBullet extends Bullet {
   }
   show() {
     if (this.remove == false) {
-      let offset = angleToVector(this.direction).getScaledVector(
+      let offset = geo.angleToVector(this.direction).getScaledVector(
         this.currentLength / 2
       );
       if (this.drawer != null) {
@@ -718,9 +724,9 @@ class Entity {
   #speedMultiplier = 1;
   dead = false;
   dynamicVelocity = { speed: 0, direction: 0 };
-  #previousPos = new Vector(0, 0);
+  #previousPos = new geo.Vector(0, 0);
   target = null;
-  targetPredictedPosition = new Vector(0, 0);
+  targetPredictedPosition = new geo.Vector(0, 0);
   showHealthbar = true;
   /** Extra unnecessary damage dealt on death. */
   overkill = 0;
@@ -729,7 +735,7 @@ class Entity {
   constructor(world, x, y, health, speed, drawer, hitSize) {
     this.x = x;
     this.y = y;
-    this.#previousPos = new Vector(x, y);
+    this.#previousPos = new geo.Vector(x, y);
     this.rotation = 0;
     this.maxHealth = health;
     this.health = health;
@@ -749,7 +755,7 @@ class Entity {
   }
   tickDynamicVelocity(time) {
     if (this.speed != 0) {
-      let now = new Vector(this.x, this.y);
+      let now = new geo.Vector(this.x, this.y);
       let distMoved = now.distanceTo(this.#previousPos);
       let angle = this.#previousPos.subtract(now).getAngle();
       let dt = time ? time : 1;
@@ -806,10 +812,10 @@ class Entity {
         new TextParticle(
           this.x,
           this.y,
-          rndScl(0, PI, 10),
+          geo.rndScl(0, PI, 10),
           60,
           2,
-          roundNum(displayNum, 2),
+          geo.roundNum(displayNum, 2),
           10,
           [255, 0, 0, 255],
           0.03
@@ -851,10 +857,10 @@ class Entity {
         new TextParticle(
           this.x,
           this.y,
-          rndScl(0, PI, 10),
+          geo.rndScl(0, PI, 10),
           60,
           2,
-          roundNum(displayNum, 2),
+          geo.roundNum(displayNum, 2),
           10,
           [0, 255, 0, 255],
           0.03
@@ -882,7 +888,7 @@ class Entity {
   }
   removeExt() {}
   getPos() {
-    return new Vector(this.x, this.y);
+    return new geo.Vector(this.x, this.y);
   }
   getSize() {
     return this.size;
@@ -894,20 +900,20 @@ class Entity {
   }
   tickExt() {}
   getPredictedPositionTime(time) {
-    let moveVector = angleToVector(
+    let moveVector = geo.angleToVector(
       this.dynamicVelocity.direction
     ).getScaledVector(this.dynamicVelocity.speed * time);
-    let thisVector = new Vector(this.x, this.y);
+    let thisVector = new geo.Vector(this.x, this.y);
     return thisVector.subtract(moveVector);
   }
   getPredictedPositionDistSpd(distance, speed) {
     return this.getPredictedPositionTime(distance / speed);
   }
   getAdjustedPredictionDistSpd(distance, speed, adjustment) {
-    let moveVector = angleToVector(
+    let moveVector = geo.angleToVector(
       this.dynamicVelocity.direction
     ).getScaledVector((this.dynamicVelocity.speed * distance) / speed);
-    let thisVector = new Vector(this.x, this.y);
+    let thisVector = new geo.Vector(this.x, this.y);
     return thisVector.subtract(moveVector.getScaledVector(adjustment));
   }
   draw() {
@@ -1035,9 +1041,9 @@ class Bloon extends Entity {
           new ShapeParticle(
             this.x,
             this.y,
-            radians(rndScl(0, 360, 10)),
+            radians(geo.rndScl(0, 360, 10)),
             40,
-            rndScl(2, 4, 10),
+            geo.rndScl(2, 4, 10),
             0.1,
             "rhombus",
             colours.ui.xp,
@@ -1052,7 +1058,7 @@ class Bloon extends Entity {
       }
       game.xp += rewards.xp.bloons[this.typeName];
       game.inventory.cash += 4; //not too sure about this
-      game.lives --
+      game.lives--;
     } else {
       this.world.particles.push(
         new WaveParticle(
@@ -1072,9 +1078,9 @@ class Bloon extends Entity {
           new ShapeParticle(
             this.x,
             this.y,
-            radians(rndScl(0, 360, 10)),
+            radians(geo.rndScl(0, 360, 10)),
             60,
-            rndScl(3, 5, 10),
+            geo.rndScl(3, 5, 10),
             0.25,
             "square",
             colours.bloons[this.type.colour],
@@ -1118,8 +1124,8 @@ class Bloon extends Entity {
       this.leaked = true;
       this.remove();
     } else {
-      let delta = convertToVector(nextPoint).subtract(
-        convertToVector(this.getPos())
+      let delta = geo.convertToVector(nextPoint).subtract(
+        geo.convertToVector(this.getPos())
       );
       let move = delta.getUnitVector().getScaledVector(this.actualSpeed);
       this.x += move.x;
@@ -1164,11 +1170,12 @@ class Tower extends Entity {
   }
   findTarget() {
     let target,
-      finalDist = 0, dist = Infinity;
+      finalDist = 0,
+      dist = Infinity;
     if (this._targetPriority === "close") {
       let minDist = Infinity;
       for (let e of this.world.bloons) {
-        dist = this.getPos().distanceTo(e.getPos())
+        dist = this.getPos().distanceTo(e.getPos());
         if (this.global || dist <= this.range + e.size) {
           if (dist < minDist) {
             minDist = dist;
@@ -1180,7 +1187,7 @@ class Tower extends Entity {
     } else if (this._targetPriority === "far") {
       let maxDist = 0;
       for (let e of this.world.bloons) {
-        dist = this.getPos().distanceTo(e.getPos())
+        dist = this.getPos().distanceTo(e.getPos());
         if (this.global || dist <= this.range + e.size) {
           if (dist > maxDist) {
             maxDist = dist;
@@ -1192,7 +1199,7 @@ class Tower extends Entity {
     } else if (this._targetPriority === "last") {
       let minProgress = Infinity;
       for (let e of this.world.bloons) {
-        dist = this.getPos().distanceTo(e.getPos())
+        dist = this.getPos().distanceTo(e.getPos());
         if (this.global || dist <= this.range + e.size) {
           if (e.progress < minProgress) {
             minProgress = e.progress;
@@ -1204,7 +1211,7 @@ class Tower extends Entity {
     } else if (this._targetPriority === "first") {
       let maxProgress = 0;
       for (let e of this.world.bloons) {
-        dist = this.getPos().distanceTo(e.getPos())
+        dist = this.getPos().distanceTo(e.getPos());
         if (this.global || dist <= this.range + e.size) {
           if (e.progress > maxProgress) {
             maxProgress = e.progress;
@@ -1216,7 +1223,7 @@ class Tower extends Entity {
     } else if (this._targetPriority === "strong") {
       let maxDifficulty = -Infinity;
       for (let e of this.world.bloons) {
-        dist = this.getPos().distanceTo(e.getPos())
+        dist = this.getPos().distanceTo(e.getPos());
         if (this.global || dist <= this.range + e.size) {
           if (e.type.difficulty > maxDifficulty) {
             maxDifficulty = e.type.difficulty;
@@ -1254,7 +1261,7 @@ class Tower extends Entity {
   }
   draw() {
     super.draw();
-    if (this.getPos().distanceTo(new Vector(mouseX, mouseY)) < this.size) {
+    if (this.getPos().distanceTo(new geo.Vector(smouse.x, smouse.y)) < this.size) {
       noStroke();
       fill(100, 100);
       circle(this.x, this.y, this.range * 2);
@@ -1274,7 +1281,8 @@ class Tower extends Entity {
         this.y - this.size - textSize() * 1.12
       );
       text(this.pops + " pops", this.x, this.y + this.size + textSize() * 1.12);
-      if(this.global) text("Global range!", this.x, this.y + this.size + textSize() * 2.12);
+      if (this.global)
+        text("Global range!", this.x, this.y + this.size + textSize() * 2.12);
     }
   }
   setTargetingPrio(prio) {
@@ -1290,8 +1298,25 @@ class Tower extends Entity {
   }
 }
 
-
-
 function logPoint(point) {
   return "(x: " + point.x + ", y: " + point.y + ")";
 }
+export {
+  logPoint,
+  Bloon,
+  TextParticle,
+  DrawerParticle,
+  WaveParticle,
+  ScreenShakeInstance,
+  ShapeParticle,
+  SkyBullet,
+  Entity,
+  Tower,
+  BloonType,
+  Bullet,
+  LaserBullet,
+  ContinuousLaserBullet,
+  PointBullet,
+  bullet,
+  bullets,
+};

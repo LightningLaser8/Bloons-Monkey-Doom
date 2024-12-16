@@ -1,3 +1,4 @@
+import { mapRegistry } from "./registries.js";
 /*
     Bloons Monkey Doom: Reverse Bloons Tower Defense
     Copyright (C) 2024 LightningLaser8
@@ -49,14 +50,14 @@ const grasslands = {
               type: "test_tower",
               x: 122,
               y: 238,
-              effect: "place"
+              effect: "place",
             },
             {
               type: "test_sniper",
               x: 563,
               y: 105,
               target: "strong",
-              effect: "place"
+              effect: "place",
             },
           ],
         },
@@ -73,7 +74,7 @@ const grasslands = {
               x: 563,
               y: 105,
               target: "strong",
-              effect: "upgrade"
+              effect: "upgrade",
             },
           ],
         },
@@ -90,19 +91,21 @@ const grasslands = {
               x: 563,
               y: 105,
               target: "strong",
-              effect: "upgrade"
+              effect: "upgrade",
             },
           ],
-        }
+        },
       ],
-    }
-  ]
-}
-mapRegistry.add("grasslands", grasslands)
-mapRegistry.add("grasslands2", grasslands)
-mapRegistry.add("grasslands3", grasslands)
-mapRegistry.add("grasslands4", grasslands)
-mapRegistry.add("grasslands5", grasslands)
-mapRegistry.add("grasslands6", grasslands)
-mapRegistry.add("grasslands7", grasslands)
-mapRegistry.add("grasslands8", grasslands)
+    },
+  ],
+};
+mapRegistry.add("grasslands", grasslands);
+mapRegistry.add("grasslands2", grasslands);
+mapRegistry.add("grasslands3", grasslands);
+mapRegistry.add("grasslands4", grasslands);
+mapRegistry.add("grasslands5", grasslands);
+mapRegistry.add("grasslands6", grasslands);
+mapRegistry.add("grasslands7", grasslands);
+mapRegistry.add("grasslands8", grasslands);
+
+export { mapRegistry };

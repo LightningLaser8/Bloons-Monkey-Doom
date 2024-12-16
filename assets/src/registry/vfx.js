@@ -1,3 +1,7 @@
+import { effectRegistry } from "./registries.js";
+import { colours } from "../universal.js";
+import { WaveParticle, ShapeParticle } from "../classes.js";
+import { angleToVector, degToRad, rnd } from "../geometry.js";
 /*
     Bloons Monkey Doom: Reverse Bloons Tower Defense
     Copyright (C) 2024 LightningLaser8
@@ -66,7 +70,9 @@ class ParticleEffect extends VisualEffect {
     rotateSpeed
   ) {
     super(function (world, x, y, inDirection) {
-      let dir = useParentDirection ? inDirection + degToRad(direction) : direction;
+      let dir = useParentDirection
+        ? inDirection + degToRad(direction)
+        : direction;
       let offVct = angleToVector(dir).getScaledVector(offset);
       for (let i = 0; i < count; i++) {
         world.particles.push(
@@ -221,7 +227,7 @@ effectRegistry.add(
       [200, 200, 200, 0],
       6,
       2
-    )
+    ),
   ])
 );
 
@@ -254,7 +260,7 @@ effectRegistry.add(
       [200, 200, 200, 0],
       5,
       1
-    )
+    ),
   ])
 );
 
@@ -279,14 +285,8 @@ effectRegistry.add(
       0,
       0
     ),
-    new WaveParticleEffect(
-      20,
-      0,
-      30,
-      colours.ui.xp,
-      colours.ui.xp,
-      5,
-      1
-    )
+    new WaveParticleEffect(20, 0, 30, colours.ui.xp, colours.ui.xp, 5, 1),
   ])
 );
+export { effectRegistry };
+export { VisualEffect, ParticleEffect, WaveParticleEffect, MultiEffect };

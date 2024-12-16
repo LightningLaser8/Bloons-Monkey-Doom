@@ -1,3 +1,5 @@
+import { ImageContainer } from "./geometry.js";
+import { ui } from "./game.js";
 /*
     Bloons Monkey Doom: Reverse Bloons Tower Defense
     Copyright (C) 2024 LightningLaser8
@@ -80,7 +82,7 @@ const colours = {
 let error = {};
 const images = {
   bloons: {
-    red: error,
+    red: new ImageContainer("assets/textures/bloons/red.png"),
     blue: error,
     green: error,
     yellow: error,
@@ -159,8 +161,14 @@ const rewards = {
 };
 
 const names = {
-  map_difficulties: ["Beginner", "Intermediate", "Advanced", "Expert", "Master"],
-  game_difficulties: ["Easy", "Medium", "Hard", "Impossible"]
+  map_difficulties: [
+    "Beginner",
+    "Intermediate",
+    "Advanced",
+    "Expert",
+    "Master",
+  ],
+  game_difficulties: ["Easy", "Medium", "Hard", "Impossible"],
 };
 
 const title = {
@@ -168,7 +176,31 @@ const title = {
   extras: {
     "start-menu": "",
     "map-select": ": Map Selector",
-    "game": ": In Game"
+    game: ": In Game",
+  },
+};
+
+class Localisation {
+  static directory = {};
+  constructor() {
+    throw new TypeError("Cannot instantiate Localisation");
+  }
+  static text(name) {
+    return this.directory[name] ?? name;
+  }
+  static async setup(type = "generic") {
+    const file = await import("../localisation/" + type + ".json", {
+      with: { type: "text/json" },
+    })?.default;
+    if (Array.isArray(file)) {
+      throw new Error("Invalid localisation file!");
+    }
+    for (let item of Object.keys(file)) {
+      if (typeof file[item] !== "string") {
+        throw new Error("Invalid localisation entry: " + file[item]);
+      }
+      this.directory[item] = file[item];
+    }
   }
 }
 
@@ -274,3 +306,13 @@ function setupAnimations() {
     },
   };
 }
+export {
+  setupAnimations,
+  colours,
+  images,
+  prices,
+  rewards,
+  names,
+  title,
+  Localisation,
+};

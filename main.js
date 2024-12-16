@@ -28,17 +28,17 @@ function createWindow () {
     webPreferences: {
       preload: path.join(__dirname, 'preload.js')
     },
-    resizable: false,
+    //resizable: false,
     titleBarStyle: 'hidden',
     titleBarOverlay: {
-      color: '#ff7F00',
-      symbolColor: '#000000',
+      color: '#000000',
+      symbolColor: '#ff7F00',
       height: 40
     },
     icon: "./bmd.ico"
   })
   mainWindow.loadFile('index.html')
-  // mainWindow.webContents.openDevTools()
+  mainWindow.webContents.openDevTools()
   ipcMain.on("command", (event, command) => {
     switch(command + ""){
       case "quit":
@@ -63,7 +63,7 @@ app.whenReady().then(() => {
     callback({
       responseHeaders: {
         ...details.responseHeaders,
-        'Content-Security-Policy': ["default-src 'self'; script-src 'self' cdn.statically.io; style-src 'self' 'unsafe-inline'"]
+        'Content-Security-Policy': ["default-src 'self'; script-src 'self' cdn.statically.io cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'"]
       }
     })
   })

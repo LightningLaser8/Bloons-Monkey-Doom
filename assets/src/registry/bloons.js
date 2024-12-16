@@ -1,3 +1,7 @@
+import { bloonRegistry } from "./registries.js";
+import { BloonType, baseSpeed } from "../classes.js";
+import { DrawImage, noTextureError } from "../geometry.js";
+import { images } from "../universal.js";
 /*
     Bloons Monkey Doom: Reverse Bloons Tower Defense
     Copyright (C) 2024 LightningLaser8
@@ -27,7 +31,6 @@ class DrawBloon extends DrawImage {
   }
 }
 
-const baseSpeed = 1.2;
 //normal bloons 25x32, size 10
 //small bloons 15x18, size 7
 bloonRegistry.add(
@@ -186,3 +189,4 @@ bloonRegistry.add(
     2
   )
 );
+export { bloonRegistry };
