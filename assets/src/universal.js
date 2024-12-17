@@ -61,6 +61,12 @@ const colours = {
     zebra: [130, 130, 130, 255],
     rainbow: [255, 128, 0, 255], //actually the same as the accent
     ceramic: [190, 120, 50, 255],
+    //Blimp moment
+    moab: [100, 150, 255, 255],
+    bfb: [255, 50, 50, 255],
+    zomg: [21, 21, 21, 255],
+    ddt: [130, 130, 130, 255],
+    bad: [155, 55, 225, 255],
   },
   /** Colours of the title screen */
   title: {
@@ -94,9 +100,18 @@ const images = {
     lead: new ImageContainer("assets/textures/bloons/lead.png"),
     rainbow: new ImageContainer("assets/textures/bloons/rainbow.png"),
     ceramic: new ImageContainer("assets/textures/bloons/ceramic.png"),
+    moab: new ImageContainer("assets/textures/bloons/moab.png"),
+    bfb: new ImageContainer("assets/textures/bloons/bfb.png"),
+    zomg: new ImageContainer("assets/textures/bloons/zomg.png"),
+    ddt: new ImageContainer("assets/textures/bloons/ddt.png"),
+    bad: new ImageContainer("assets/textures/bloons/bad.png"),
   },
   art: {
     moab: new ImageContainer("assets/textures/art/moab.png"),
+    bfb: new ImageContainer("assets/textures/art/bfb.png"),
+    zomg: new ImageContainer("assets/textures/art/zomg.png"),
+    ddt: new ImageContainer("assets/textures/art/ddt.png"),
+    bad: new ImageContainer("assets/textures/art/bad.png"),
   },
   maps: {
     map1: new ImageContainer("assets/textures/maps/map1.png"),
@@ -106,9 +121,9 @@ const images = {
     bloon_gold: new ImageContainer("assets/textures/ui/bloon_gold.png"),
     xp_bg: new ImageContainer("assets/textures/ui/xp_bg.png"),
   },
-  // buttons: {
-  //   play: error
-  // }
+  buttons: {
+    play: new ImageContainer("assets/textures/buttons/play.png")
+  }
 };
 /** Pricing for in-game purchasables */
 const prices = {
@@ -117,20 +132,48 @@ const prices = {
     bloons: {
       red: 1,
       blue: 3,
-      green: 5,
-      yellow: 8,
-      pink: 15,
-      white: 25,
-      purple: 26,
-      black: 25,
-      zebra: 55,
-      lead: 55,
-      rainbow: 125,
-      ceramic: 300,
+      green: 4,
+      yellow: 6,
+      pink: 10,
+      white: 15,
+      purple: 18,
+      black: 15,
+      zebra: 20,
+      lead: 25,
+      rainbow: 50,
+      ceramic: 100,
+      moab: 600,
+      bfb: 2500,
+      zomg: 5200,
+      ddt: 3500,
+      bad: 12000
     },
   },
-  /** Pricing for anything costing the other currency. */
+  /** Pricing for anything costing bloon gold. */
   bloon_gold: {},
+  /** XP costs for unlocking things. */
+  xp: {
+    /** XP costs for unlocking bloon types in a game. */
+    bloons: {
+      red: 0,
+      blue: 100,
+      green: 200,
+      yellow: 500,
+      pink: 1000,
+      white: 2500,
+      purple: 3000,
+      black: 2500,
+      zebra: 7500,
+      lead: 10000,
+      rainbow: 20000,
+      ceramic: 50000,
+      moab: 100000,
+      bfb: 350000,
+      zomg: 500000,
+      ddt: 200000,
+      bad: 1000000
+    }
+  }
 };
 /** Reward stuff */
 const rewards = {
@@ -139,9 +182,10 @@ const rewards = {
     /** General xp scoring:
      * - more speed => less xp
      * - immunity => 1 less xp per immunity
-     * - more health => less xp
+     * - more health => less xp  
+     * 
      * Overall, easier to leak => less XP earned.
-     * These stats are per layer.
+     * These stats are per layer, so higher layers should give fewer XP points.
      */
     bloons: {
       red: 5,
@@ -156,6 +200,11 @@ const rewards = {
       lead: 1,
       rainbow: 2,
       ceramic: 1,
+      moab: 1,
+      bfb: 1,
+      zomg: 1,
+      ddt: 1,
+      bad: 1
     },
   },
 };
@@ -211,7 +260,7 @@ const names = {
     "expert",
     "master",
   ],
-  game_difficulties: ["Easy", "Medium", "Hard", "Impossible"],
+  game_difficulties: ["easy", "medium", "hard", "impossible"],
 };
 
 const title = {

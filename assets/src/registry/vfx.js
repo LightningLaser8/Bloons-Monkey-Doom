@@ -1,7 +1,8 @@
 import { effectRegistry } from "./registries.js";
 import { colours } from "../universal.js";
 import { WaveParticle, ShapeParticle } from "../classes.js";
-import { angleToVector, degToRad, rnd } from "../geometry.js";
+import { angleToVector} from "../geometry.js";
+import { degToRad, rnd } from "../number.js";
 /*
     Bloons Monkey Doom: Reverse Bloons Tower Defense
     Copyright (C) 2024 LightningLaser8

@@ -14,6 +14,7 @@
   "ui.menu.maps": "Maps",
   "ui.shop.title": "Shop",
   "ui.bloons.title": "Bloons",
+  "ui.xp.title": "Level",
   "util.mouse-pos.title": "Mouse Position",
   "util.fps.title": "FPS",
   "map.grasslands.name": "Grasslands",
@@ -45,5 +46,15 @@
   "bloon.zebra.name": "Zebra",
   "bloon.lead.name": "Lead",
   "bloon.rainbow.name": "Rainbow",
-  "bloon.ceramic.name": "Ceramic"
+  "bloon.ceramic.name": "Ceramic",
+  "bloon.moab.name": "MOAB",
+  "bloon.bfb.name": "BFB",
+  "bloon.zomg.name": "ZOMG",
+  "bloon.ddt.name": "DDT",
+  "bloon.bad.name": "BAD",
+  "message.standard.gamecreate": "Game created.",
+  "message.standard.gameload": "Game loaded.",
+  "message.standard.modload": "Mod loaded:",
+  "message.standard.gamesave": "Game saved.",
+  "message.error": "Error"
 }

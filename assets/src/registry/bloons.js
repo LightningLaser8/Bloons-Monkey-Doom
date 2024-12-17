@@ -189,4 +189,56 @@ bloonRegistry.add(
     2
   )
 );
+bloonRegistry.add(
+  "moab",
+  new BloonType(
+    "moab",
+    9,
+    200,
+    baseSpeed,
+    new DrawBloon("moab", 115, 75),
+    40,
+    "ceramic",
+    4
+  )
+);
+bloonRegistry.add(
+  "bfb",
+  new BloonType(
+    "bfb",
+    10,
+    700,
+    baseSpeed * 0.25,
+    new DrawBloon("bfb", 155, 105),
+    52.5,
+    "moab",
+    4
+  )
+);
+bloonRegistry.add(
+  "zomg",
+  new BloonType(
+    "zomg",
+    12,
+    4000,
+    baseSpeed * 0.18,
+    new DrawBloon("zomg", 155, 105),
+    52.5,
+    "bfb",
+    4
+  )
+);
+bloonRegistry.add(
+  "ddt",
+  new BloonType(
+    "ddt",
+    11,
+    400,
+    baseSpeed * 2.64,
+    new DrawBloon("ddt", 145, 99),
+    40,
+    "ceramic",
+    4
+  )
+);
 export { bloonRegistry };

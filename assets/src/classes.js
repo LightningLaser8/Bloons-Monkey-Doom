@@ -1,5 +1,6 @@
 import { smouse, game } from "./game.js";
 import * as geo from "./geometry.js";
+import { degToRad, radToDeg, rnd, rndScl, roundNum, shorten } from "./number.js";
 import { colours, rewards } from "./universal.js";
 import { bloonRegistry } from "./registry/registries.js";
 const baseSpeed = 1.2;
@@ -316,7 +317,7 @@ class Bullet {
   }
   init() {
     this.direction =
-      this.direction + radians(geo.rndScl(-this.inaccuracy, this.inaccuracy, 5));
+      this.direction + radians(rndScl(-this.inaccuracy, this.inaccuracy, 5));
     this.maxLife = this.lifetime;
     this.onCreate();
   }
@@ -387,9 +388,9 @@ class Bullet {
         0.2
       );
       p.step(1, particleArray);
-      p.speed = geo.rnd(5, 8);
-      p.lifetime = geo.rnd(7, 11);
-      p.direction += radians(geo.rnd(-15, 15));
+      p.speed = rnd(5, 8);
+      p.lifetime = rnd(7, 11);
+      p.direction += radians(rnd(-15, 15));
       p.direction += radians(180);
       particleArray.push(p);
     }
@@ -430,7 +431,7 @@ class Bullet {
       b.x = this.x;
       b.y = this.y;
       b.direction = this.direction;
-      b.inaccuracy += geo.rnd(lower, upper);
+      b.inaccuracy += rnd(lower, upper);
       b.attributableEntity = this.attributableEntity;
       b.init();
       b.step(2);
@@ -452,7 +453,7 @@ class Bullet {
           b.x = this.x;
           b.y = this.y;
           b.direction = this.direction + radians(this.intervalAngle + angle);
-          b.inaccuracy += geo.rnd(lower, upper);
+          b.inaccuracy += rnd(lower, upper);
           b.attributableEntity = this.attributableEntity;
           b.init();
           b.move(this.intervalOffset);
@@ -528,7 +529,7 @@ class SkyBullet extends Bullet {
     this.targetY = this.y;
     this.targetX = this.x;
     this.y -= 600;
-    this.x += geo.rnd(-this.xInaccuracy, this.xInaccuracy);
+    this.x += rnd(-this.xInaccuracy, this.xInaccuracy);
     super.init();
 
     let targetVector = new geo.Vector(this.targetX, this.targetY);
@@ -577,7 +578,7 @@ class LaserBullet extends Bullet {
   }
   init() {
     this.direction =
-      this.direction + radians(geo.rnd(-this.inaccuracy, this.inaccuracy));
+      this.direction + radians(rnd(-this.inaccuracy, this.inaccuracy));
     this.maxLife = this.lifetime;
     this.originalDamage = this.damage;
     this.currentSize = this.size;
@@ -812,10 +813,10 @@ class Entity {
         new TextParticle(
           this.x,
           this.y,
-          geo.rndScl(0, PI, 10),
+          rndScl(0, PI, 10),
           60,
           2,
-          geo.roundNum(displayNum, 2),
+          roundNum(displayNum, 2),
           10,
           [255, 0, 0, 255],
           0.03
@@ -857,10 +858,10 @@ class Entity {
         new TextParticle(
           this.x,
           this.y,
-          geo.rndScl(0, PI, 10),
+          rndScl(0, PI, 10),
           60,
           2,
-          geo.roundNum(displayNum, 2),
+          roundNum(displayNum, 2),
           10,
           [0, 255, 0, 255],
           0.03
@@ -1041,9 +1042,9 @@ class Bloon extends Entity {
           new ShapeParticle(
             this.x,
             this.y,
-            radians(geo.rndScl(0, 360, 10)),
+            radians(rndScl(0, 360, 10)),
             40,
-            geo.rndScl(2, 4, 10),
+            rndScl(2, 4, 10),
             0.1,
             "rhombus",
             colours.ui.xp,
@@ -1078,9 +1079,9 @@ class Bloon extends Entity {
           new ShapeParticle(
             this.x,
             this.y,
-            radians(geo.rndScl(0, 360, 10)),
+            radians(rndScl(0, 360, 10)),
             60,
-            geo.rndScl(3, 5, 10),
+            rndScl(3, 5, 10),
             0.25,
             "square",
             colours.bloons[this.type.colour],

@@ -1,3 +1,4 @@
+import { degToRad, radToDeg, rnd, rndScl, roundNum, shorten } from "./number.js";
 /*
     Bloons Monkey Doom: Reverse Bloons Tower Defense
     Copyright (C) 2024 LightningLaser8
@@ -1152,39 +1153,11 @@ function blendColours(col1, col2, col1Factor) {
   return newCol;
 }
 
-function roundNum(num, dp) {
-  return Math.round(num * 10 ** dp) / 10 ** dp;
-}
-
-function rnd(a, b) {
-  if (b > a) {
-    return Math.floor(Math.random() * (b - a + 1)) + a;
-  } else {
-    return Math.floor(Math.random() * (a - b + 1)) + b;
-  }
-}
-
-function rndScl(a, b, scl) {
-  return rnd(a * scl, b * scl) / scl;
-}
-
-function degToRad(degrees) {
-  return (degrees / 180) * Math.PI;
-}
-
-function radToDeg(radians) {
-  return (radians / Math.PI) * 180;
-}
 export {
   rectCollidesRect,
   circleCollidesCircle,
   pointCollidesCircle,
   pointCollidesRect,
-  radToDeg,
-  degToRad,
-  rnd,
-  rndScl,
-  roundNum,
   blendColours,
   convertToVector,
   Vector,

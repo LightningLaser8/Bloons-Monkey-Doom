@@ -18,12 +18,11 @@ import {
   RADShape,
   noTextureError,
   ImageContainer,
-  rnd,
-  roundNum,
   modImage,
 } from "./geometry.js";
 import {} from "./graphics.js";
 import { setupIntegrate, loadMods } from "./integrator.js";
+import { shorten, rnd, roundNum } from "./number.js";
 /*
     Bloons Monkey Doom: Reverse Bloons Tower Defense
     Copyright (C) 2024 LightningLaser8
@@ -80,6 +79,28 @@ let game = {
       ddts: 0,
       bads: 0,
     },
+    /** Unlocked stuff, like bloon types */
+    unlocked: {
+      bloons: {
+        red: false,
+        blue: false,
+        green: false,
+        yellow: false,
+        pink: false,
+        black: false,
+        purple: false,
+        white: false,
+        zebra: false,
+        lead: false,
+        rainbow: false,
+        ceramic: false,
+        moab: false,
+        bfb: false,
+        zomg: false,
+        ddt: false,
+        bad: false,
+      },
+    },
     /** Powerups in storage */
     powerups: {},
   },
@@ -87,6 +108,8 @@ let game = {
   xp: 0,
   /** XP level */
   level: 0,
+  /** Experience points until next level is earned */
+  toNextLevel: 100,
   /** Map the game is in. */
   map: null,
   difficulty: 0,
@@ -133,6 +156,8 @@ let waitingForKeyRelease = false;
 
 let { world, player } = game;
 
+let messages = [];
+
 let sortedMaps;
 
 loadGameFrom(mapRegistry.get("grasslands")); //To stop errors on load
@@ -159,8 +184,8 @@ async function preload() {
     }
   }
   //Localisation
-  let lang = localStorage.getItem("lang") ?? "en-gb"
-  setTitleBarExtras("["+lang+"]");
+  let lang = localStorage.getItem("lang") ?? "en-gb";
+  setTitleBarExtras("[" + lang + "]");
   await Localisation.setup(lang);
   setTitleBarExtras();
   refreshWindowTitle();
@@ -327,6 +352,7 @@ function gameLoop() {
   tickEntities();
   tickBullets();
   tickParticles();
+  tickXPLevels();
 
   if (game.lives <= 0) {
     if (game.round >= game.map.difficulties[game.difficulty].lastRound) {
@@ -492,23 +518,10 @@ function startMenu() {
   showTitleAt(400, 100);
 
   //Start button
-  {
-    push();
-    noStroke();
-    fill(...colours.ui.buttons.contrast);
-    textSize(30);
-    text(
-      Localisation.text("ui.menu.map") +
-        ": " +
-        Localisation.text("map." + game.map.name + ".name"),
-      400,
-      770
-    );
-    pop();
-  }
   button(400, 700, 200, 80, Localisation.text("button.start"), () => {
     //x: 340, width: 150
     changeGameState("main-menu");
+    message(Localisation.text("message.standard.gamecreate"));
   });
   // button(490, 700, 80, 80, "Map\nSelect", () => {
   //   game.state = "map-select";
@@ -612,6 +625,7 @@ function mapSelectMenu() {
 }
 
 function mainMenu() {
+  push();
   background(colours.ui.background);
   fill(0, 100, 200);
   rect(400, 400, 800, 700);
@@ -646,8 +660,76 @@ function mainMenu() {
     changeGameState("start-menu");
     commands.quit();
   });
-  button(550, 200, 100, 60, Localisation.text("button.play"), () => {
-    changeGameState("map-select");
+  imageButton(
+    650,
+    200,
+    232,
+    120,
+    images.buttons.play,
+    () => {
+      changeGameState("map-select");
+    },
+    true,
+    false,
+    false
+  );
+  push();
+  fill(colours.ui.buttons.main);
+  stroke(colours.ui.buttons.contrast);
+  strokeWeight(3);
+  textSize(50);
+  modText("button.play", 650, 200, 100);
+  pop();
+  drawMoneyCounter(250, 30, false);
+  textSize(25);
+  fill(colours.ui.xp);
+  noStroke();
+  textAlign(LEFT, CENTER);
+  text(
+    Localisation.text("ui.xp.title") +
+      " " +
+      shorten(game.level) +
+      " (" +
+      shorten(game.xp) +
+      "/" +
+      shorten(game.toNextLevel) +
+      ")",
+    330,
+    30
+  );
+
+  //Draw messages
+  let msg = messages[0];
+  if (msg) {
+    if (msg.time <= 0) {
+      if (msg.opacity <= 0) {
+        messages.splice(0, 1);
+      } else {
+        msg.opacity -= 5;
+      }
+    } else {
+      msg.time--;
+    }
+    fill(...msg.colour, msg.opacity);
+    noStroke();
+    text("> " + msg.text, 20, 775);
+  }
+
+  pop();
+}
+
+function message(msg, type = "normal", time = 180) {
+  const cols = {
+    normal: [255, 255, 255],
+    warn: [255, 255, 100],
+    error: [255, 100, 100],
+    debug: [0, 255, 200],
+  };
+  messages.push({
+    text: msg,
+    colour: cols[type] ?? cols.normal,
+    time: time,
+    opacity: 255,
   });
 }
 
@@ -718,8 +800,7 @@ function button(
   height = 30,
   shownText = "",
   onPress = () => {},
-  draw = true,
-  scaleFrom = null
+  draw = true
 ) {
   push();
   if (draw) {
@@ -751,13 +832,14 @@ function button(
   }
 
   if (draw) {
+    let txt = Localisation.text(shownText);
     rect(x, y, width, height);
     textSize(30); //starting point for checks
-    textSize(((textSize() * width) / textWidth(scaleFrom ?? shownText)) * 0.8);
+    textSize(((textSize() * width) / textWidth(txt)) * 0.8);
     fill(...colours.ui.buttons.contrast);
     noStroke();
     textAlign(CENTER, CENTER);
-    modText(shownText, x, y /*, width, height*/);
+    text(txt, x, y /*, width, height*/);
   }
   pop();
   return false;
@@ -774,7 +856,8 @@ function imageButton(
   shownImage = error,
   onPress = () => {},
   draw = true,
-  unavailable = false
+  unavailable = false,
+  outlines = true
 ) {
   push();
   if (draw) {
@@ -790,8 +873,10 @@ function imageButton(
   if (hovered) {
     if (draw) {
       noFill();
-      rect(x, y, width, height);
-      fill(...colours.ui.buttons.highlight);
+      if (outlines) {
+        rect(x, y, width, height);
+        fill(...colours.ui.buttons.highlight);
+      }
       tint(128);
     }
   } else {
@@ -810,7 +895,7 @@ function imageButton(
   }
 
   if (draw) {
-    rect(x, y, width, height);
+    if (outlines) rect(x, y, width, height);
     modImage(shownImage, x, y, width - 10, height - 10);
   }
   pop();
@@ -826,17 +911,17 @@ function captionedImageButton(
   shownText = "",
   onPress = () => {},
   draw = true,
-  unavailable = false,
-  scaleFrom = null
+  unavailable = false
 ) {
   push();
   imageButton(x, y, width, height, shownImage, onPress, draw, unavailable);
   textSize(30); //starting point for checks
-  textSize(((textSize() * width) / textWidth(scaleFrom ?? shownText)) * 0.8);
+  let txt = Localisation.text(shownText);
+  textSize(((textSize() * width) / textWidth(txt)) * 0.8);
   fill(...colours.ui.buttons.contrast);
   noStroke();
   textAlign(CENTER, CENTER);
-  modText(shownText, x, y + textSize() * 1 + height / 2 /*, width, height*/);
+  text(txt, x, y + textSize() * 1 + height / 2 /*, width, height*/);
   pop();
 }
 
@@ -876,11 +961,11 @@ function mapButton(x, y, map) {
   } else {
     extraInfo = Localisation.text("map.info.unavailable");
   }
-  modText(extraInfo, x, y + off + 103);
+  text(extraInfo, x, y + off + 103);
   if (map.difficulties[game.difficulty])
     modImage(
       images.ui.bloon_gold,
-      x + textWidth(extraInfo) / 2,
+      x + textWidth(extraInfo) / 2 + 1,
       y + off + 103,
       12,
       15
@@ -916,7 +1001,6 @@ function drawInGameUI() {
 }
 
 function drawXP() {
-  game.level = game.xp; //temporary
   push();
   noFill();
   stroke(...colours.ui.accent);
@@ -925,24 +1009,37 @@ function drawXP() {
   fill(colours.ui.xp);
   stroke(255);
   textSize(20);
-  textSize(
-    Math.min(50, (textSize() * 100) / textWidth("$" + game.level)) * 0.8
-  );
+  let lvlTxt = shorten(game.level);
+  textSize(Math.min(50, (textSize() * 100) / textWidth(lvlTxt)) * 0.8);
   textAlign(CENTER, CENTER);
   RADImage(images.ui.xp_bg, 40, 40, 90, 90, frameCount / 60);
   RADImage(images.ui.xp_bg, 40, 40, 90, 90, 0);
-  modText(game.level, 40, 40);
+  text(lvlTxt, 40, 40);
+  let xpTxt = shorten(game.xp);
+  textSize(20);
+  textSize(Math.min(20, (textSize() * 100) / textWidth(xpTxt)) * 0.8);
+  text(xpTxt, 40, 80);
   pop();
 }
 
-function drawMoneyCounter() {
-  let originX = 235;
-  let originY = 25;
+function tickXPLevels() {
+  if (game.xp > game.toNextLevel) {
+    game.toNextLevel *= 2.25;
+    game.toNextLevel = Math.round(
+      roundNum(game.toNextLevel, -Math.round(Math.log10(game.toNextLevel)))
+    );
+    game.level++;
+  }
+}
+
+function drawMoneyCounter(originX = 235, originY = 25, bg = true) {
   push();
-  fill(...colours.ui.background, 150);
-  stroke(...colours.ui.accent);
-  strokeWeight(10);
-  rect(originX, originY, 300, 60);
+  if (bg) {
+    fill(...colours.ui.background, 150);
+    stroke(...colours.ui.accent);
+    strokeWeight(10);
+    rect(originX, originY, 300, 60);
+  }
   fill(colours.ui.cash);
   noStroke();
   textSize(20);
@@ -1027,37 +1124,13 @@ function drawSidebar() {
     textSize(30);
     modText("ui.bloons.title", 725, 36);
 
+    drawBloonSelector();
+
     bloonSendButton(
       700,
       100,
       ui.orderedBloonTypes[ui.selectedBloonType],
       prices.cash.bloons[ui.orderedBloonTypes[ui.selectedBloonType]]
-    );
-    button(630, 140, 30, 30, "<", () => {
-      if (ui.selectedBloonType > 0) ui.selectedBloonType--;
-    });
-    button(770, 140, 30, 30, ">", () => {
-      if (ui.selectedBloonType < ui.orderedBloonTypes.length - 1)
-        ui.selectedBloonType++;
-    });
-    textSize(5); //starting point for checks
-    textSize(
-      Math.min(
-        30,
-        ((textSize() * 100) /
-          textWidth(
-            Localisation.text(
-              "bloon." + ui.orderedBloonTypes[ui.selectedBloonType] + ".name"
-            )
-          )) *
-          0.8
-      )
-    );
-    modText(
-      "bloon." + ui.orderedBloonTypes[ui.selectedBloonType] + ".name",
-      700,
-      140,
-      100
     );
   }
   if (ui.sidebar === "bloons-shop") {
@@ -1067,67 +1140,54 @@ function drawSidebar() {
     textSize(30);
     modText("ui.shop.title", 725, 36);
 
-    //Buy button
+    drawBloonSelector();
+
     bloonBuyButton(
       700,
       100,
       ui.orderedBloonTypes[ui.selectedBloonType],
       prices.cash.bloons[ui.orderedBloonTypes[ui.selectedBloonType]]
     );
-    button(630, 140, 30, 30, "<", () => {
-      if (ui.selectedBloonType > 0) ui.selectedBloonType--;
-    });
-    button(770, 140, 30, 30, ">", () => {
-      if (ui.selectedBloonType < ui.orderedBloonTypes.length - 1)
-        ui.selectedBloonType++;
-    });
-    textSize(5); //starting point for checks
-    textSize(
-      Math.min(
-        30,
-        ((textSize() * 100) /
-          textWidth(
-            Localisation.text(
-              "bloon." + ui.orderedBloonTypes[ui.selectedBloonType] + ".name"
-            )
-          )) *
-          0.8
-      )
-    );
-    modText(
-      "bloon." + ui.orderedBloonTypes[ui.selectedBloonType] + ".name",
-      700,
-      140,
-      100
-    );
   }
   pop();
 }
 
-function bloonSendButton(x, y, bloon) {
-  let img = images.art[bloon] ?? images.bloons[bloon];
-  if (!img) {
-    console.error("Image not found for bloon " + bloon);
-    img = noTextureError;
-  }
-  modImage(img, x - 70, y, img.width / 2, img.height / 2);
-  if (game.inventory.bloons[bloon + "s"] == null) {
-    console.error("There is no slot in your inventory for " + bloon + "s");
-    return;
-  }
-
-  strokeWeight(5);
-  stroke(colours.ui.buttons.contrast);
-  fill(colours.ui.buttons.main);
-  rect(x - 20, y, 40, 30);
+function drawBloonSelector() {
+  push();
+  button(630, 140, 30, 30, "<", () => {
+    if (ui.selectedBloonType > 0) ui.selectedBloonType--;
+  });
+  button(770, 140, 30, 30, ">", () => {
+    if (ui.selectedBloonType < ui.orderedBloonTypes.length - 1)
+      ui.selectedBloonType++;
+  });
   noStroke();
   fill(colours.ui.buttons.contrast);
   textSize(5); //starting point for checks
   textSize(
-    ((textSize() * 40) / textWidth("x" + game.inventory.bloons[bloon + "s"])) *
-      0.8
+    Math.min(
+      30,
+      ((textSize() * 100) /
+        textWidth(
+          Localisation.text(
+            "bloon." + ui.orderedBloonTypes[ui.selectedBloonType] + ".name"
+          )
+        )) *
+        0.8
+    )
   );
-  text("x" + game.inventory.bloons[bloon + "s"], x - 20, y);
+  modText(
+    "bloon." + ui.orderedBloonTypes[ui.selectedBloonType] + ".name",
+    700,
+    140,
+    100
+  );
+  pop();
+}
+
+function bloonSendButton(x, y, bloon) {
+  drawBloonInfoStuff(x, y, bloon);
+
   button(x + 40, y, 40, 30, "-->", () => {
     if (game.inventory.bloons[bloon + "s"] >= 1) {
       game.inventory.bloons[bloon + "s"]--;
@@ -1136,13 +1196,20 @@ function bloonSendButton(x, y, bloon) {
   });
 }
 
-function bloonBuyButton(x, y, bloon, price) {
+function drawBloonInfoStuff(x, y, bloon) {
+  push();
   let img = images.art[bloon] ?? images.bloons[bloon];
   if (!img) {
     console.error("Image not found for bloon '" + bloon + "'");
     img = noTextureError;
   }
-  modImage(img, x - 70, y, img.width / 2, img.height / 2);
+  modImage(
+    img,
+    x - 70,
+    y,
+    Math.min(img.width / 2, 40),
+    Math.min(img.height / 2, (40 * img.height) / img.width)
+  );
   if (game.inventory.bloons[bloon + "s"] == null) {
     console.error("There is no slot in your inventory for '" + bloon + "'s");
     return;
@@ -1152,21 +1219,37 @@ function bloonBuyButton(x, y, bloon, price) {
   stroke(colours.ui.buttons.contrast);
   fill(colours.ui.buttons.main);
   rect(x - 20, y, 40, 30);
-  rect(x + 73, y, 40, 30);
 
   noStroke();
   fill(colours.ui.buttons.contrast);
 
   textSize(5); //starting point for checks
   textSize(
-    ((textSize() * 40) / textWidth("x" + game.inventory.bloons[bloon + "s"])) *
+    ((textSize() * 40) /
+      textWidth("x" + shorten(game.inventory.bloons[bloon + "s"]))) *
       0.8
   );
-  text("x" + game.inventory.bloons[bloon + "s"], x - 20, y);
+  text("x" + shorten(game.inventory.bloons[bloon + "s"]), x - 20, y);
+  pop();
+}
+
+function bloonBuyButton(x, y, bloon, price) {
+  push();
+  drawBloonInfoStuff(x, y, bloon);
+
+  push();
+  strokeWeight(5);
+  stroke(colours.ui.buttons.contrast);
+  fill(colours.ui.buttons.main);
+  rect(x + 73, y, 40, 30);
+  pop();
+
+  noStroke();
+  fill(colours.ui.buttons.contrast);
 
   textSize(5); //starting point for checks
-  textSize(((textSize() * 40) / textWidth("x" + price)) * 0.8);
-  text("$" + price, x + 73, y);
+  textSize(((textSize() * 40) / textWidth("x" + shorten(price))) * 0.8);
+  text("$" + shorten(price), x + 73, y);
 
   button(x + 27, y, 30, 30, "+", () => {
     if (game.inventory.cash >= price) {
@@ -1174,6 +1257,7 @@ function bloonBuyButton(x, y, bloon, price) {
       game.inventory.bloons[bloon + "s"]++;
     }
   });
+  pop();
 }
 
 function calculateScreenShake() {
