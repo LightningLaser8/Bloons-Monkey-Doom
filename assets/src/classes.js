@@ -1,8 +1,9 @@
 import { smouse, game } from "./game.js";
 import * as geo from "./geometry.js";
 import { degToRad, radToDeg, rnd, rndScl, roundNum, shorten } from "./number.js";
-import { colours, rewards } from "./universal.js";
-import { bloonRegistry } from "./registry/registries.js";
+import { colours, Localisation, rewards } from "./universal.js";
+import { bloonRegistry, statusRegistry } from "./registry/registries.js";
+import { Integrate } from "./integrate-import.js";
 const baseSpeed = 1.2;
 export { baseSpeed };
 /*
@@ -323,9 +324,9 @@ class Bullet {
   }
   applyStatusesTo(entity) {
     for (let i = 0; i < this.statusStacks; i++) {
-      if (this.status != "null" && this.statusDuration) {
+      if (this.status !== "null" && this.statusDuration) {
         entity.addStatus({
-          effect: this.status,
+          effect: statusRegistry.create(this.status, Integrate.types),
           time: this.statusDuration,
           source: this.attributableEntity,
         });
@@ -378,7 +379,7 @@ class Bullet {
       this.remove = true;
     }
     if (this.isCrit) {
-      let p = new Particle(
+      let p = new DrawerParticle(
         this.x,
         this.y,
         this.direction,
@@ -747,8 +748,8 @@ class Entity {
   }
   addStatus(status) {
     this.statuses.push(status);
-    if (statusRegistry.get(status.effect).onApply) {
-      statusRegistry.get(status.effect).onApply.apply(this);
+    if (status.effect.onApply) {
+      status.effect.onApply.apply(this);
     }
   }
   get actualSpeed() {
@@ -777,7 +778,7 @@ class Entity {
     this.damageMultiplier = 1;
     this.#speedMultiplier = 1;
     for (let s of this.statuses) {
-      let status = statusRegistry.get(s.effect);
+      let status = s.effect;
       if (s.time > 0) {
         if (status.tickChance ? Math.random() < status.tickChance : true) {
           status.tick.apply(this);
@@ -1148,12 +1149,12 @@ class Tower extends Entity {
   _reloadLeft = 0;
   _target = null;
   global = false;
+  name = "null";
   constructor(world, x, y, drawer, bullet, reload, range, size) {
     super(world, x, y, 1000, 0, drawer, size);
     this.bullet = bullet;
     this.reload = reload;
     this.range = range;
-    this.displayName = "Tower";
     this.tier = "0";
     this.path = "Only";
     this.pops = 0;
@@ -1270,20 +1271,20 @@ class Tower extends Entity {
       stroke(0);
       strokeWeight(1);
       textSize(13);
-      text(this.displayName, this.x, this.y - this.size - textSize() * 3.12);
+      text(Localisation.text("tower."+this.name+".name"), this.x, this.y - this.size - textSize() * 3.12);
       text(
-        this.path + " path, Tier " + this.tier,
+        Localisation.text("tower.info.path."+this.path)+" "+Localisation.text("tower.info.tier")+" " + this.tier,
         this.x,
         this.y - this.size - textSize() * 2.12
       );
       text(
-        "Targeting: " + this._targetPriority,
+        Localisation.text("tower.info.targeting")+": " + Localisation.text("tower.targeting."+this._targetPriority),
         this.x,
         this.y - this.size - textSize() * 1.12
       );
-      text(this.pops + " pops", this.x, this.y + this.size + textSize() * 1.12);
+      text(this.pops + " "+Localisation.text("tower.info.pops"), this.x, this.y + this.size + textSize() * 1.12);
       if (this.global)
-        text("Global range!", this.x, this.y + this.size + textSize() * 2.12);
+        text(Localisation.text("tower.info.global-range"), this.x, this.y + this.size + textSize() * 2.12);
     }
   }
   setTargetingPrio(prio) {

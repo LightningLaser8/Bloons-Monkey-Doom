@@ -36,7 +36,9 @@ function setupIntegrate() {
   Integrate.setPrefix(true);
 }
 function loadMods(){
-  console.log("Mods have not yet been implemented.")
+  console.log("Mod loading started...")
+  console.warn("Mods have not yet been implemented.")
+  console.log("Mod loading finished.")
 }
 export { setupIntegrate, loadMods };
 //shut i'll do the actual bit later

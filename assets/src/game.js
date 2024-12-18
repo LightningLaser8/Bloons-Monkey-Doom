@@ -159,6 +159,7 @@ let { world, player } = game;
 let messages = [];
 
 let sortedMaps;
+let newLang = "en-gb";
 
 loadGameFrom(mapRegistry.get("grasslands")); //To stop errors on load
 changeGameState("start-menu");
@@ -185,6 +186,7 @@ async function preload() {
   }
   //Localisation
   let lang = localStorage.getItem("lang") ?? "en-gb";
+  console.log("Starting game with language :"+lang)
   setTitleBarExtras("[" + lang + "]");
   await Localisation.setup(lang);
   setTitleBarExtras();
@@ -201,9 +203,14 @@ function updateSize() {
     "-" + (800 - windowWidth) / 2 + "px -" + (800 - space) / 2 + "px";
 }
 
-function updateLanguage(lang) {
+function updateLanguageRS(lang) {
   localStorage.setItem("lang", lang);
   location.reload();
+}
+
+async function updateLanguage(lang) {
+  localStorage.setItem("lang", lang);
+  await Localisation.setup(lang)
 }
 
 function resize() {
@@ -265,6 +272,8 @@ function draw() {
     mainMenu();
   } else if (game.state === "map-select") {
     mapSelectMenu();
+  } else if (game.state === "lang-selector") {
+    languageMenu();
   } else if (game.state === "game") {
     modImage(images.maps[game.map.background], 400, 400, 800, 800);
     gameLoop();
@@ -274,12 +283,7 @@ function draw() {
     modImage(images.maps[game.map.background], 400, 400, 800, 800);
     tickParticles();
     drawOffsetGame();
-    drawExtraInfo();
-    //Moneys
-    drawMoneyCounter();
-    //XP and level
-    drawXP();
-    drawMonkeyHealthbar();
+    drawInGameUI();
 
     if (!gameEndStarted && bloonDespawnEventTick()) {
       gameEndDelay = 100;
@@ -288,6 +292,7 @@ function draw() {
     if (gameEndStarted) {
       if (gameEndDelay <= 0) {
         changeGameState("main-menu");
+        gameEndStarted = false;
       } else {
         gameEndDelay--;
       }
@@ -673,6 +678,20 @@ function mainMenu() {
     false,
     false
   );
+  hiddenTextImageButton(
+    200,
+    200,
+    104,
+    158,
+    images.buttons.lang,
+    "button.language-menu",
+    () => {
+      changeGameState("lang-selector");
+    },
+    true,
+    false,
+    false
+  );
   push();
   fill(colours.ui.buttons.main);
   stroke(colours.ui.buttons.contrast);
@@ -698,23 +717,75 @@ function mainMenu() {
     30
   );
 
-  //Draw messages
-  let msg = messages[0];
-  if (msg) {
-    if (msg.time <= 0) {
-      if (msg.opacity <= 0) {
-        messages.splice(0, 1);
+  //Draw message stack
+  let ypos = 775;
+  textSize(20);
+  for (let i = messages.length; i >= 0; i--) {
+    let msg = messages[i];
+    if (msg) {
+      if (msg.time <= 0) {
+        if (msg.opacity <= 0) {
+          messages.splice(i, 1);
+          i--;
+          continue;
+        } else {
+          msg.opacity -= 5;
+        }
       } else {
-        msg.opacity -= 5;
+        msg.time--;
       }
-    } else {
-      msg.time--;
+      fill(...msg.colour, msg.opacity);
+      noStroke();
+      if (i === messages.length - 1)
+        text("> " + msg.text + " (" + messages.length + ")", 20, ypos);
+      else text("> " + msg.text, 20, ypos);
+      ypos -= 25;
     }
-    fill(...msg.colour, msg.opacity);
-    noStroke();
-    text("> " + msg.text, 20, 775);
   }
+  pop();
+}
 
+function languageMenu() {
+  push();
+  background(colours.ui.background);
+  fill(colours.ui.buttons.contrast);
+  textSize(45);
+  modText("menu.lang-selector.title", 400, 50, 800);
+  fill(colours.ui.buttons.highlight);
+  rect(400, 425, 800, 650);
+  button(40, 30, 50, 30, Localisation.text("button.back"), () => {
+    changeGameState("main-menu");
+    newLang = Localisation.lang;
+  });
+  button(40, 70, 50, 30, Localisation.text("button.save"), () => {
+    changeGameState("main-menu");
+    message(Localisation.text("message.standard.langload"));
+    updateLanguage(newLang).then(() => {
+      message(Localisation.text("message.standard.langchange") + newLang);
+    });
+  });
+  let ypos = 200;
+  for (let l of Localisation.languages) {
+    button(
+      400,
+      ypos,
+      750,
+      50,
+      l.name,
+      () => {
+        newLang = l.short;
+      },
+      true,
+      40
+    );
+    if (newLang === l.short) {
+      noFill();
+      stroke(colours.ui.accent);
+      strokeWeight(6);
+      rect(400, ypos, 750, 50);
+    }
+    ypos += 60;
+  }
   pop();
 }
 
@@ -800,7 +871,8 @@ function button(
   height = 30,
   shownText = "",
   onPress = () => {},
-  draw = true
+  draw = true,
+  maxTextSize = Infinity
 ) {
   push();
   if (draw) {
@@ -835,7 +907,9 @@ function button(
     let txt = Localisation.text(shownText);
     rect(x, y, width, height);
     textSize(30); //starting point for checks
-    textSize(((textSize() * width) / textWidth(txt)) * 0.8);
+    textSize(
+      Math.min(maxTextSize, ((textSize() * width) / textWidth(txt)) * 0.8)
+    );
     fill(...colours.ui.buttons.contrast);
     noStroke();
     textAlign(CENTER, CENTER);
@@ -897,6 +971,75 @@ function imageButton(
   if (draw) {
     if (outlines) rect(x, y, width, height);
     modImage(shownImage, x, y, width - 10, height - 10);
+  }
+  pop();
+  return false;
+}
+
+/**
+ * A button that shows an image instead of text, until hovered over, when it shows the text as well.
+ */
+function hiddenTextImageButton(
+  x = 0,
+  y = 0,
+  width = 30,
+  height = 30,
+  shownImage = error,
+  shownText = "",
+  onPress = () => {},
+  draw = true,
+  unavailable = false,
+  outlines = true
+) {
+  push();
+  if (draw) {
+    rectMode(CENTER);
+    stroke(...colours.ui.buttons.contrast);
+    strokeWeight(5);
+  }
+  let hovered =
+    smouse.x > x - width / 2 &&
+    smouse.x < x + width / 2 &&
+    smouse.y < y + height / 2 &&
+    smouse.y > y - height / 2;
+  if (hovered) {
+    if (draw) {
+      noFill();
+      if (outlines) {
+        rect(x, y, width, height);
+        fill(...colours.ui.buttons.highlight);
+      }
+      tint(128);
+    }
+  } else {
+    if (draw) {
+      fill(...colours.ui.buttons.main);
+    }
+  }
+  if (draw && unavailable) {
+    tint(100, 0, 0);
+  }
+  if (mouseIsPressed && !waitingForKeyRelease) {
+    if (hovered && !unavailable) {
+      waitingForKeyRelease = true;
+      onPress();
+    }
+  }
+
+  if (draw) {
+    if (outlines) rect(x, y, width, height);
+    modImage(shownImage, x, y, width - 10, height - 10);
+    if (hovered) {
+      push();
+      let txt = Localisation.text(shownText);
+      textSize(30); //starting point for checks
+      textSize(((textSize() * width) / textWidth(txt)) * 0.8);
+      fill(...colours.ui.buttons.contrast);
+      noStroke();
+      textAlign(CENTER, CENTER);
+      text(txt, x, y);
+      pop();
+    }
   }
   pop();
   return false;
@@ -1015,7 +1158,7 @@ function drawXP() {
   RADImage(images.ui.xp_bg, 40, 40, 90, 90, frameCount / 60);
   RADImage(images.ui.xp_bg, 40, 40, 90, 90, 0);
   text(lvlTxt, 40, 40);
-  let xpTxt = shorten(game.xp);
+  let xpTxt = shorten(game.xp) + "/"+shorten(game.toNextLevel);
   textSize(20);
   textSize(Math.min(20, (textSize() * 100) / textWidth(xpTxt)) * 0.8);
   text(xpTxt, 40, 80);
@@ -1024,9 +1167,9 @@ function drawXP() {
 
 function tickXPLevels() {
   if (game.xp > game.toNextLevel) {
-    game.toNextLevel *= 2.25;
+    game.toNextLevel = Math.round(game.toNextLevel * 1.65);
     game.toNextLevel = Math.round(
-      roundNum(game.toNextLevel, -Math.round(Math.log10(game.toNextLevel)))
+      roundNum(game.toNextLevel, 2-(game.toNextLevel+"").length)
     );
     game.level++;
   }
@@ -1402,6 +1545,7 @@ function loadCurrentRoundFrom(map) {
     let towerClass = towerRegistry.get(towerType);
     let createdTower = new towerClass(world, tower.x, tower.y);
     createdTower.setTargetingPrio(tower.target ?? "first");
+    createdTower.name = towerType.split(":")[0]
     if (tower.effect) {
       createVisualEffect(tower.effect, tower.x, tower.y);
     }
@@ -1490,8 +1634,8 @@ function bloonDespawnEventTick() {
       let bloonIndexToRemove = rnd(0, world.bloons.length);
       let bloon = world.bloons[bloonIndexToRemove];
       if (bloon) {
-        createVisualEffect("despawn", bloon.x, bloon.y, 0);
-        game.xp += rewards.xp.bloons[bloon.typeName] * 2;
+        if(world.particles.length < 1000) createVisualEffect("despawn", bloon.x, bloon.y, 0);//LIMIT THIS!!!
+        game.inventory.bloon_gold ++
       }
       world.bloons.splice(bloonIndexToRemove, 1);
     } else {

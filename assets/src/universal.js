@@ -1,5 +1,6 @@
 import { ImageContainer } from "./geometry.js";
 import { ui } from "./game.js";
+import { cyrb53 } from "./number.js";
 /*
     Bloons Monkey Doom: Reverse Bloons Tower Defense
     Copyright (C) 2024 LightningLaser8
@@ -122,7 +123,8 @@ const images = {
     xp_bg: new ImageContainer("assets/textures/ui/xp_bg.png"),
   },
   buttons: {
-    play: new ImageContainer("assets/textures/buttons/play.png")
+    play: new ImageContainer("assets/textures/buttons/play.png"),
+    lang: new ImageContainer("assets/textures/buttons/lang.png")
   }
 };
 /** Pricing for in-game purchasables */
@@ -212,6 +214,13 @@ const rewards = {
 class Localisation {
   static directory = {};
   static loaded = false;
+  static lang = "none";
+  static languages = [
+    {name: "English (GB)", short: "en-gb"},
+    {name: "ASCII", short: "en-gb-binary"},
+    {name: "Hexadecimal", short: "en-gb-hex"},
+    {name: "(BG) hsilgnE", short: "en-gb-reversed"},
+  ]
   constructor() {
     throw new TypeError("Cannot instantiate Localisation");
   }
@@ -222,6 +231,9 @@ class Localisation {
   static async setup(language = "en-gb") {
     this.directory = {};
     this.loaded = false;
+    let initLang = language;
+    let parts = language.split("-")
+    language = language.replaceAll("-reversed", "").replaceAll("-binary", "").replaceAll("-hex", "")
     const file = await import("../localisation/" + language + ".json", {
       with: { type: "json" },
     });
@@ -241,9 +253,15 @@ class Localisation {
           "Invalid localisation entry: '" + item + ": " + obj[item] + "'"
         );
       }
-      this.directory[item] = obj[item];
+      let toAdd = obj[item]
+      if(parts.includes("reversed")) toAdd = Array.from(toAdd).reverse().join("");
+      if(parts.includes("binary")) toAdd = Array.from(toAdd).map(x => x.charCodeAt(0).toString(2)).join(" ")
+      if(parts.includes("hex")) toAdd = Array.from(toAdd).map(x => x.charCodeAt(0).toString(16)).map(x => x==="20"?" ":x).join("")
+      
+      this.directory[item] = toAdd;
     }
-    console.log("Game language is "+language+".")
+    console.log("Game language is "+initLang+".")
+    this.lang = initLang;
     this.loaded = true;
   }
 }
@@ -385,3 +403,5 @@ export {
   Localisation,
   modText,
 };
+
+
